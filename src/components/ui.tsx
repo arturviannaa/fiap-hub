@@ -101,14 +101,41 @@ export function Vazio({ icone, titulo, texto }: { icone: ReactNode; titulo: stri
 
 const CORES = ['#ed145b', '#7c5cff', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6']
 
-export function Avatar({ nome, tamanho = 36 }: { nome: string; tamanho?: number }) {
+// Passe usuarioId + foto para mostrar a foto de perfil; sem eles cai nas
+// iniciais coloridas. `foto` (nome do arquivo no disco) entra na URL como
+// cache-buster: trocar a foto muda a URL e o navegador rebusca.
+export function Avatar({
+  nome,
+  tamanho = 36,
+  usuarioId,
+  foto,
+}: {
+  nome: string
+  tamanho?: number
+  usuarioId?: number
+  foto?: string | null
+}) {
+  if (usuarioId && foto) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={`/api/avatar/${usuarioId}?v=${encodeURIComponent(foto.slice(7, 15))}`}
+        alt={nome}
+        width={tamanho}
+        height={tamanho}
+        loading="lazy"
+        className="shrink-0 rounded-full object-cover"
+        style={{ width: tamanho, height: tamanho }}
+      />
+    )
+  }
   const iniciais = nome
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase())
     .join('')
-  // Cor derivada do nome: estavel entre sessoes e sem upload de foto.
+  // Cor derivada do nome: estavel entre sessoes.
   let h = 0
   for (const c of nome) h = (h * 31 + c.charCodeAt(0)) >>> 0
   const cor = CORES[h % CORES.length]

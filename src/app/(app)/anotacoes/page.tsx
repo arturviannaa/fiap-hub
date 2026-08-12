@@ -19,6 +19,7 @@ type Nota = {
   usuario_id: number
   atualizado_em: string
   autor: string
+  autor_foto: string | null
 }
 
 function Cartao({ n, meu }: { n: Nota; meu: boolean }) {
@@ -26,7 +27,7 @@ function Cartao({ n, meu }: { n: Nota; meu: boolean }) {
   return (
     <article className="painel flex flex-col gap-2 p-4">
       <div className="flex items-center gap-2 text-xs suave">
-        <Avatar nome={n.autor} tamanho={22} />
+        <Avatar nome={n.autor} tamanho={22} usuarioId={n.usuario_id} foto={n.autor_foto} />
         <span>{meu ? 'você' : n.autor.split(' ')[0]}</span>
         <span>·</span>
         <span>{quando(n.atualizado_em)}</span>
@@ -65,9 +66,9 @@ export default async function Anotacoes({ searchParams }: { searchParams: Promis
 
   const notas = await sql<Nota>(
     aba === 'turma'
-      ? `SELECT n.*, u.nome AS autor FROM notas n JOIN usuarios u ON u.id = n.usuario_id
+      ? `SELECT n.*, u.nome AS autor, u.foto AS autor_foto FROM notas n JOIN usuarios u ON u.id = n.usuario_id
          WHERE n.publica ORDER BY n.atualizado_em DESC LIMIT 200`
-      : `SELECT n.*, u.nome AS autor FROM notas n JOIN usuarios u ON u.id = n.usuario_id
+      : `SELECT n.*, u.nome AS autor, u.foto AS autor_foto FROM notas n JOIN usuarios u ON u.id = n.usuario_id
          WHERE n.usuario_id = $1 ORDER BY n.atualizado_em DESC LIMIT 200`,
     aba === 'turma' ? [] : [u.id],
   )

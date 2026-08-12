@@ -38,7 +38,7 @@ export default async function PaginaAula({ params }: { params: Promise<{ slug: s
   const [feito, notas, arquivos] = await Promise.all([
     um('SELECT 1 FROM progresso WHERE usuario_id = $1 AND aula_slug = $2', [u.id, slug]),
     sql(
-      `SELECT n.id, n.titulo, n.corpo, n.publica, n.usuario_id, n.atualizado_em, u.nome AS autor
+      `SELECT n.id, n.titulo, n.corpo, n.publica, n.usuario_id, n.atualizado_em, u.nome AS autor, u.foto AS autor_foto
        FROM notas n JOIN usuarios u ON u.id = n.usuario_id
        WHERE n.aula_slug = $1 AND (n.publica OR n.usuario_id = $2)
        ORDER BY n.id DESC`,

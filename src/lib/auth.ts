@@ -9,6 +9,7 @@ export type Usuario = {
   nome: string
   papel: 'aluno' | 'admin'
   bio: string
+  foto: string | null
 }
 
 // Dominios institucionais aceitos. A plataforma e da turma, entao email de fora
@@ -35,7 +36,7 @@ function nomeDoEmail(email: string) {
 }
 
 export async function acharOuCriar(email: string, nome: string, provedor: string) {
-  const existente = await um<Usuario>('SELECT id, email, nome, papel, bio FROM usuarios WHERE email = $1', [
+  const existente = await um<Usuario>('SELECT id, email, nome, papel, bio, foto FROM usuarios WHERE email = $1', [
     email.toLowerCase(),
   ])
   if (existente) {
@@ -47,7 +48,7 @@ export async function acharOuCriar(email: string, nome: string, provedor: string
   const papel = total === '0' ? 'admin' : 'aluno'
   return um<Usuario>(
     `INSERT INTO usuarios (email, nome, provedor, papel) VALUES ($1, $2, $3, $4)
-     RETURNING id, email, nome, papel, bio`,
+     RETURNING id, email, nome, papel, bio, foto`,
     [email.toLowerCase(), nome || nomeDoEmail(email), provedor, papel],
   )
 }
@@ -61,7 +62,7 @@ const provedores = [
       const senha = String(dados?.senha || '')
       if (!email || !senha || !dominioPermitido(email)) return null
       const conta = await um<Usuario & { senha_hash: string | null }>(
-        'SELECT id, email, nome, papel, bio, senha_hash FROM usuarios WHERE email = $1',
+        'SELECT id, email, nome, papel, bio, foto, senha_hash FROM usuarios WHERE email = $1',
         [email],
       )
       if (!conta?.senha_hash) return null
@@ -101,7 +102,7 @@ export async function usuarioAtual(): Promise<Usuario> {
   const sessao = await auth()
   const id = (sessao?.user as any)?.id
   if (!id) throw new Error('nao autenticado')
-  const u = await um<Usuario>('SELECT id, email, nome, papel, bio FROM usuarios WHERE id = $1', [id])
+  const u = await um<Usuario>('SELECT id, email, nome, papel, bio, foto FROM usuarios WHERE id = $1', [id])
   if (!u) throw new Error('nao autenticado')
   return u
 }

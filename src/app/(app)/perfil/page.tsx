@@ -4,7 +4,8 @@ import { um } from '@/lib/db'
 import { todasAulas } from '@/lib/conteudo'
 import { salvarPerfil } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
-import { Area, Avatar, Botao, Campo } from '@/components/ui'
+import { FotoPerfil } from '@/components/foto-perfil'
+import { Area, Botao, Campo } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Perfil' }
@@ -31,8 +32,8 @@ export default async function Perfil() {
     <div className="mx-auto max-w-3xl">
       <Cabecalho titulo="Meu perfil" />
 
-      <div className="painel mb-4 flex items-center gap-4 p-5">
-        <Avatar nome={u.nome} tamanho={64} />
+      <div className="painel mb-4 flex flex-wrap items-center gap-4 p-5">
+        <FotoPerfil usuarioId={u.id} nome={u.nome} foto={u.foto} />
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold">{u.nome}</p>
           <p className="truncate text-sm suave">{u.email}</p>

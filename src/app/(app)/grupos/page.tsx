@@ -15,15 +15,15 @@ export default async function Grupos() {
   const u = await usuarioAtual()
   const [grupos, turma] = await Promise.all([
     gruposDoUsuario(u.id),
-    sql<{ id: number; nome: string; email: string }>(
-      'SELECT id, nome, email FROM usuarios WHERE id <> $1 ORDER BY nome',
+    sql<{ id: number; nome: string; email: string; foto: string | null }>(
+      'SELECT id, nome, email, foto FROM usuarios WHERE id <> $1 ORDER BY nome',
       [u.id],
     ),
   ])
 
   const membrosPorGrupo = grupos.length
-    ? await sql<{ grupo_id: number; id: number; nome: string }>(
-        `SELECT gm.grupo_id, u.id, u.nome FROM grupo_membros gm
+    ? await sql<{ grupo_id: number; id: number; nome: string; foto: string | null }>(
+        `SELECT gm.grupo_id, u.id, u.nome, u.foto FROM grupo_membros gm
          JOIN usuarios u ON u.id = gm.usuario_id
          WHERE gm.grupo_id = ANY($1::int[]) ORDER BY u.nome`,
         [grupos.map((g) => g.id)],
@@ -73,7 +73,7 @@ export default async function Grupos() {
                         key={m.id}
                         className="flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2 text-sm"
                       >
-                        <Avatar nome={m.nome} tamanho={22} />
+                        <Avatar nome={m.nome} tamanho={22} usuarioId={m.id} foto={m.foto} />
                         <span>{m.id === u.id ? 'você' : m.nome.split(' ').slice(0, 2).join(' ')}</span>
                         {g.criador_id === u.id && m.id !== u.id && (
                           <form action={removerDoGrupo.bind(null, g.id, m.id)}>
