@@ -3,7 +3,8 @@ import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { todasAulas } from '@/lib/conteudo'
 import { Cabecalho } from '@/components/cabecalho'
-import { Avatar, Selo, quando } from '@/components/ui'
+import { EditorPapel } from '@/components/editor-papel'
+import { Avatar, Selo, TagPapel, quando } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Turma' }
@@ -33,7 +34,14 @@ export default async function Turma() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <Cabecalho titulo="Turma" descricao={`${membros.length} pessoas estudando por aqui.`} />
+      <Cabecalho
+        titulo="Turma"
+        descricao={
+          u.papel === 'admin'
+            ? `${membros.length} pessoas. Como admin, você define as tags e pode corrigir nomes.`
+            : `${membros.length} pessoas estudando por aqui.`
+        }
+      />
 
       <ul className="grid gap-3 sm:grid-cols-2">
         {membros.map((m, i) => {
@@ -52,7 +60,7 @@ export default async function Turma() {
                       <Trophy size={10} /> mais adiantado
                     </Selo>
                   )}
-                  {m.papel === 'admin' && <Selo>admin</Selo>}
+                  <TagPapel papel={m.papel} />
                 </p>
                 <p className="truncate text-xs suave">{m.email}</p>
                 {m.bio && <p className="mt-1 text-sm">{m.bio}</p>}
@@ -64,6 +72,10 @@ export default async function Turma() {
                   {m.aulas}/{total} aulas · {m.notas} anotações · {m.arquivos} materiais · ativo{' '}
                   {quando(m.visto_em)} atrás
                 </p>
+
+                {u.papel === 'admin' && (
+                  <EditorPapel usuarioId={m.id} papel={m.papel} nome={m.nome} ehVoce={m.id === u.id} />
+                )}
               </div>
             </li>
           )

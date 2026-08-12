@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { Client } from 'pg'
+import { um, sql } from './db'
 
 export const CANAIS = [
   { slug: 'geral', nome: 'geral', descricao: 'Assunto livre da turma' },
@@ -8,7 +9,51 @@ export const CANAIS = [
   { slug: 'provas', nome: 'provas', descricao: 'Combinados de estudo e datas' },
 ] as const
 
-export const canalValido = (slug: string) => CANAIS.some((c) => c.slug === slug)
+export const canalFixo = (slug: string) => CANAIS.some((c) => c.slug === slug)
+
+// Canal de grupo privado: 'g:<id>'.
+export const grupoDoCanal = (canal: string) => {
+  const m = /^g:(\d+)$/.exec(canal)
+  return m ? Number(m[1]) : null
+}
+
+// Fonte unica de autorizacao do chat: usada pelo SSE e pelo envio de mensagem.
+// Canal fixo e da turma inteira; canal de grupo so para quem e membro.
+export async function canalPermitido(canal: string, usuarioId: number) {
+  if (canalFixo(canal)) return true
+  const grupo = grupoDoCanal(canal)
+  if (!grupo) return false
+  return !!(await um('SELECT 1 FROM grupo_membros WHERE grupo_id = $1 AND usuario_id = $2', [
+    grupo,
+    usuarioId,
+  ]))
+}
+
+export type Grupo = {
+  id: number
+  nome: string
+  descricao: string
+  criador_id: number
+  membros: number
+}
+
+export function gruposDoUsuario(usuarioId: number) {
+  return sql<Grupo>(
+    `SELECT g.id, g.nome, g.descricao, g.criador_id,
+            (SELECT count(*) FROM grupo_membros m WHERE m.grupo_id = g.id)::int AS membros
+     FROM grupos g JOIN grupo_membros gm ON gm.grupo_id = g.id
+     WHERE gm.usuario_id = $1
+     ORDER BY g.nome`,
+    [usuarioId],
+  )
+}
+
+export type Anexo = {
+  id: number
+  nome: string
+  mime: string
+  tamanho: number
+}
 
 export type MensagemChat = {
   id: number
@@ -17,7 +62,19 @@ export type MensagemChat = {
   criado_em: string
   usuario_id: number
   nome: string
+  papel: string
+  arquivo_id: number | null
+  arquivo_nome: string | null
+  arquivo_mime: string | null
+  arquivo_tamanho: number | null
 }
+
+export const SELECT_MENSAGEM = `
+  SELECT m.id, m.canal, m.corpo, m.criado_em, m.usuario_id, u.nome, u.papel,
+         m.arquivo_id, a.nome AS arquivo_nome, a.mime AS arquivo_mime, a.tamanho AS arquivo_tamanho
+  FROM mensagens m
+  JOIN usuarios u ON u.id = m.usuario_id
+  LEFT JOIN arquivos a ON a.id = m.arquivo_id`
 
 // Um unico LISTEN por processo alimenta todas as conexoes SSE abertas. Sem
 // isso seria uma conexao Postgres por aba aberta.
@@ -40,8 +97,9 @@ export function barramento(): EventEmitter {
       .then(() => cliente.query('LISTEN chat'))
       .then(() => {
         cliente.on('notification', (n) => {
-          const [id, canal] = String(n.payload).split(':')
-          bus.emit('mensagem', { id: Number(id), canal })
+          const [op, id, ...resto] = String(n.payload).split(':')
+          // canal de grupo tem ':' no nome, entao o resto e remontado
+          bus.emit('mensagem', { op, id: Number(id), canal: resto.join(':') })
         })
       })
       .catch(() => setTimeout(conectar, 2000))
