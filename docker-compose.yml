@@ -37,10 +37,12 @@ services:
       CODIGO_TURMA: ${CODIGO_TURMA:?defina CODIGO_TURMA no .env}
       CONTENT_DIR: /app/content
       UPLOAD_DIR: /app/uploads
+      FIREBASE_CRED_PATH: /app/secrets/firebase.json
     volumes:
       # rw porque o entrypoint semeia o conteudo inicial num volume vazio
       - conteudo:/app/content
       - uploads:/app/uploads
+      - ./secrets:/app/secrets:ro
     ports:
       - '127.0.0.1:8082:3000'
 

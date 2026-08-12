@@ -2,6 +2,7 @@ import { sql, um } from '@/lib/db'
 import { naoAutorizado, usuarioDoToken } from '@/lib/mobile-auth'
 import { gruposDoUsuario } from '@/lib/chat'
 import { limparTexto, permitido } from '@/lib/limites'
+import { enviarPush } from '@/lib/push'
 
 // Lista meus grupos + a turma (pra escolher quem entra num grupo novo).
 export async function GET(req: Request) {
@@ -37,5 +38,11 @@ export async function POST(req: Request) {
      SELECT $1, id FROM usuarios WHERE id = ANY($2::int[]) ON CONFLICT DO NOTHING`,
     [grupo!.id, [u.id, ...ids]],
   )
+  if (ids.length)
+    enviarPush(ids, {
+      titulo: `Você entrou no grupo "${nomeLimpo}"`,
+      corpo: `${u.nome.split(' ')[0]} te adicionou`,
+      data: { canal: `g:${grupo!.id}` },
+    }).catch(() => {})
   return Response.json({ ok: true, grupoId: grupo!.id, canal: `g:${grupo!.id}` })
 }

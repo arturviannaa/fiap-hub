@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import tech.pervian.fiapestudante.data.Api
 import tech.pervian.fiapestudante.data.Atualizacao
+import tech.pervian.fiapestudante.data.Push
 import tech.pervian.fiapestudante.data.Sessao
 import tech.pervian.fiapestudante.data.VersaoApp
 import tech.pervian.fiapestudante.ui.*
@@ -116,6 +117,7 @@ fun AppPrincipal(api: Api, sessao: Sessao, tema: String, onTema: (String) -> Uni
         Aba("perfil", "Perfil", Icons.Filled.Person),
     )
 
+    LaunchedEffect(Unit) { Push.registrar(ctx) }
     LaunchedEffect(Unit) { while (isActive) { api.heartbeat(); delay(45_000) } }
 
     // Auto-update.

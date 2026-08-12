@@ -30,6 +30,13 @@ BEGIN
   END IF;
 END $$;
 
+CREATE TABLE IF NOT EXISTS push_tokens (
+  token       TEXT PRIMARY KEY,
+  usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS push_tokens_usuario_idx ON push_tokens (usuario_id);
+
 CREATE TABLE IF NOT EXISTS progresso (
   usuario_id   INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   aula_slug    TEXT NOT NULL,

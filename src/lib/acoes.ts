@@ -10,6 +10,7 @@ import { usuarioAtual } from './auth'
 import { canalPermitido } from './chat'
 import { COOLDOWN_CHAT_MS, esperaRestante, limparTexto, marcarAcao, permitido } from './limites'
 import { PAPEIS, type Papel } from './papeis'
+import { enviarPush } from './push'
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads')
 
@@ -211,6 +212,12 @@ export async function criarGrupo(dados: FormData) {
      ON CONFLICT DO NOTHING`,
     [grupo!.id, [u.id, ...membros]],
   )
+  if (membros.length)
+    enviarPush(membros, {
+      titulo: `Você entrou no grupo "${nome}"`,
+      corpo: `${u.nome.split(' ')[0]} te adicionou`,
+      data: { canal: `g:${grupo!.id}` },
+    }).catch(() => {})
   revalidatePath('/grupos')
   revalidatePath('/chat')
   redirect(`/chat?canal=g:${grupo!.id}`)
@@ -227,6 +234,8 @@ export async function convidarParaGrupo(grupoId: number, dados: FormData) {
      SELECT $1, id FROM usuarios WHERE id = $2 ON CONFLICT DO NOTHING`,
     [grupoId, usuarioId],
   )
+  const [g] = await sql<{ nome: string }>('SELECT nome FROM grupos WHERE id = $1', [grupoId])
+  if (g) enviarPush([usuarioId], { titulo: `Você entrou no grupo "${g.nome}"`, corpo: `${u.nome.split(' ')[0]} te adicionou`, data: { canal: `g:${grupoId}` } }).catch(() => {})
   revalidatePath('/grupos')
 }
 
