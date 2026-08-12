@@ -10,8 +10,10 @@ export async function GET(req: Request) {
   const u = await usuarioDoToken(req)
   if (!u) return naoAutorizado()
 
-  const vistoRow = await um<{ notif_visto_em: string }>('SELECT notif_visto_em FROM usuarios WHERE id = $1', [u.id])
-  const visto = new Date(vistoRow?.notif_visto_em || 0).getTime()
+  const row = await um<{ notif_visto_em: string; notif_limpo_em: string }>(
+    'SELECT notif_visto_em, notif_limpo_em FROM usuarios WHERE id = $1', [u.id])
+  const visto = new Date(row?.notif_visto_em || 0).getTime()
+  const limpo = new Date(row?.notif_limpo_em || 0).getTime()
 
   // convites: grupos onde entrei recentemente e não sou o criador
   const convites = await sql<{ id: number; nome: string; entrou_em: string; criador: string }>(
@@ -42,7 +44,10 @@ export async function GET(req: Request) {
     }
   }
 
-  notifs.sort((a, b) => new Date(b.quando).getTime() - new Date(a.quando).getTime())
-  const naoLidas = notifs.filter((n) => new Date(n.quando).getTime() > visto).length
-  return Response.json({ notificacoes: notifs.slice(0, 40), naoLidas })
+  // Esconde o que o usuário já limpou da caixa.
+  const visiveis = notifs
+    .filter((n) => new Date(n.quando).getTime() > limpo)
+    .sort((a, b) => new Date(b.quando).getTime() - new Date(a.quando).getTime())
+  const naoLidas = visiveis.filter((n) => new Date(n.quando).getTime() > visto).length
+  return Response.json({ notificacoes: visiveis.slice(0, 40), naoLidas })
 }

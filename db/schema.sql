@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto TEXT;
 -- Última vez que o usuário abriu a aba de notificações (pra contar não lidas).
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS notif_visto_em TIMESTAMPTZ NOT NULL DEFAULT now();
+-- Tudo antes disso o usuário já 'limpou' da caixa de notificações.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS notif_limpo_em TIMESTAMPTZ NOT NULL DEFAULT now();
 
 -- Migração do papel único (coluna antiga `papel`) para o array `papeis`. Todo
 -- mundo mantém 'aluno' como base; quem era admin/professor ganha a tag extra.
