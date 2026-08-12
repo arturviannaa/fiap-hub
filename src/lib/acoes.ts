@@ -12,6 +12,9 @@ import { COOLDOWN_CHAT_MS, esperaRestante, limparTexto, marcarAcao, permitido } 
 import { PAPEIS, type Papel } from './papeis'
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads')
+
+// Admin e professor não pegam cooldown de chat (avisos, responder dúvida em rajada).
+const moderador = (u: { papeis: string[] }) => u.papeis.includes('admin') || u.papeis.includes('professor')
 const MAX_BYTES = 25 * 1024 * 1024
 
 // ---- progresso -----------------------------------------------------------
@@ -61,8 +64,8 @@ export async function salvarNota(dados: FormData) {
 
 export async function apagarNota(id: number) {
   const u = await usuarioAtual()
-  const cond = u.papel === 'admin' ? '' : ' AND usuario_id = $2'
-  await sql(`DELETE FROM notas WHERE id = $1${cond}`, u.papel === 'admin' ? [id] : [id, u.id])
+  const admin = u.papeis.includes('admin')
+  await sql(`DELETE FROM notas WHERE id = $1${admin ? '' : ' AND usuario_id = $2'}`, admin ? [id] : [id, u.id])
   revalidatePath('/anotacoes')
 }
 
@@ -99,10 +102,10 @@ export async function enviarArquivo(dados: FormData) {
 
 export async function apagarArquivo(id: number) {
   const u = await usuarioAtual()
-  const dono = u.papel === 'admin' ? '' : ' AND usuario_id = $2'
+  const admin = u.papeis.includes('admin')
   const alvo = await um<{ armazenado: string }>(
-    `DELETE FROM arquivos WHERE id = $1${dono} RETURNING armazenado`,
-    u.papel === 'admin' ? [id] : [id, u.id],
+    `DELETE FROM arquivos WHERE id = $1${admin ? '' : ' AND usuario_id = $2'} RETURNING armazenado`,
+    admin ? [id] : [id, u.id],
   )
   if (alvo) await unlink(join(UPLOAD_DIR, alvo.armazenado)).catch(() => {})
   revalidatePath('/arquivos')
@@ -119,8 +122,10 @@ export async function enviarMensagemComAnexo(dados: FormData) {
   const canal = String(dados.get('canal') || '')
   if (!(await canalPermitido(canal, u.id))) return { erro: 'Você não participa deste canal.' }
 
-  const espera = esperaRestante(`chat:${u.id}`, COOLDOWN_CHAT_MS)
-  if (espera > 0) return { erro: `Aguarde ${espera}s para mandar outra mensagem.` }
+  if (!moderador(u)) {
+    const espera = esperaRestante(`chat:${u.id}`, COOLDOWN_CHAT_MS)
+    if (espera > 0) return { erro: `Aguarde ${espera}s para mandar outra mensagem.` }
+  }
 
   const texto = limparTexto(String(dados.get('corpo') || ''))
   const anexo = dados.get('anexo')
@@ -159,8 +164,10 @@ export async function enviarMensagem(canal: string, corpo: string) {
   // Canal vem do cliente: sem esta checagem daria para escrever em grupo alheio.
   if (!(await canalPermitido(canal, u.id))) return { erro: 'Você não participa deste canal.' }
 
-  const espera = esperaRestante(`chat:${u.id}`, COOLDOWN_CHAT_MS)
-  if (espera > 0) return { erro: `Aguarde ${espera}s para mandar outra mensagem.` }
+  if (!moderador(u)) {
+    const espera = esperaRestante(`chat:${u.id}`, COOLDOWN_CHAT_MS)
+    if (espera > 0) return { erro: `Aguarde ${espera}s para mandar outra mensagem.` }
+  }
 
   const texto = limparTexto(corpo)
   if (!texto) return { erro: 'Mensagem vazia.' }
@@ -173,7 +180,7 @@ export async function enviarMensagem(canal: string, corpo: string) {
 // Autor apaga a propria; admin apaga a de qualquer um (moderacao da turma).
 export async function apagarMensagem(id: number) {
   const u = await usuarioAtual()
-  if (u.papel === 'admin') await sql('DELETE FROM mensagens WHERE id = $1', [id])
+  if (u.papeis.includes('admin')) await sql('DELETE FROM mensagens WHERE id = $1', [id])
   else await sql('DELETE FROM mensagens WHERE id = $1 AND usuario_id = $2', [id, u.id])
 }
 
@@ -251,15 +258,24 @@ export async function removerDoGrupo(grupoId: number, usuarioId: number) {
 // ---- moderacao da turma --------------------------------------------------
 
 /**
- * Troca a tag de alguem. So admin muda, e ninguem se rebaixa sozinho — senao
- * a turma pode ficar sem nenhum admin e sem como voltar atras.
+ * Liga/desliga uma tag de alguém. Só admin mexe. 'aluno' é base de todos e não
+ * sai. O admin não remove o próprio admin — senão a turma poderia ficar sem
+ * nenhum e sem como voltar atrás.
  */
-export async function definirPapel(usuarioId: number, papel: string) {
+export async function alternarPapel(usuarioId: number, papel: string) {
   const u = await usuarioAtual()
-  if (u.papel !== 'admin') return
-  if (!PAPEIS.includes(papel as Papel)) return
-  if (usuarioId === u.id && papel !== 'admin') return
-  await sql('UPDATE usuarios SET papel = $1 WHERE id = $2', [papel, usuarioId])
+  if (!u.papeis.includes('admin')) return
+  if (papel === 'aluno' || !PAPEIS.includes(papel as Papel)) return
+  if (usuarioId === u.id && papel === 'admin') return
+  // array_remove + array de add, sem duplicar; mantém 'aluno' sempre presente.
+  await sql(
+    `UPDATE usuarios SET papeis = (
+       SELECT ARRAY(SELECT DISTINCT e FROM unnest(
+         CASE WHEN $1 = ANY(papeis) THEN array_remove(papeis, $1)
+              ELSE papeis || $1 END || ARRAY['aluno']) AS e))
+     WHERE id = $2`,
+    [papel, usuarioId],
+  )
   revalidatePath('/turma')
   revalidatePath('/chat')
 }
@@ -267,7 +283,7 @@ export async function definirPapel(usuarioId: number, papel: string) {
 /** Nome ofensivo/gigante: admin normaliza sem precisar de psql. */
 export async function renomearUsuario(usuarioId: number, dados: FormData) {
   const u = await usuarioAtual()
-  if (u.papel !== 'admin') return
+  if (!u.papeis.includes('admin')) return
   const nome = limparTexto(String(dados.get('nome') || ''), 60)
   if (nome.length < 2) return
   await sql('UPDATE usuarios SET nome = $1 WHERE id = $2', [nome, usuarioId])

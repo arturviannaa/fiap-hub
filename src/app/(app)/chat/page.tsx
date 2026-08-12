@@ -28,7 +28,7 @@ export default async function PaginaChat({
       canais={[...CANAIS]}
       grupos={grupos}
       historico={historico.reverse()}
-      usuario={{ id: u.id, nome: u.nome, papel: u.papel }}
+      usuario={{ id: u.id, nome: u.nome, papeis: u.papeis }}
     />
   )
 }

@@ -1,50 +1,67 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { Check, Loader2, Pencil } from 'lucide-react'
-import { definirPapel, renomearUsuario } from '@/lib/acoes'
-import { PAPEIS } from '@/lib/papeis'
+import { alternarPapel, renomearUsuario } from '@/lib/acoes'
 
-/** Controles de moderação: só renderizado para admin. */
+// Tags que o admin pode ligar/desligar. 'aluno' é base de todos e não aparece
+// aqui (ninguém deixa de ser aluno).
+const TAGS: { valor: string; rotulo: string }[] = [
+  { valor: 'professor', rotulo: 'professor' },
+  { valor: 'admin', rotulo: 'admin' },
+]
+
+/** Controles de moderação da Turma: só renderizado para admin. */
 export function EditorPapel({
   usuarioId,
-  papel,
+  papeis,
   nome,
   ehVoce,
 }: {
   usuarioId: number
-  papel: string
+  papeis: string[]
   nome: string
   ehVoce: boolean
 }) {
   const [pendente, iniciar] = useTransition()
+  const [local, setLocal] = useState(papeis)
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2">
-      <label className="flex items-center gap-1.5 text-xs suave">
-        tag:
-        <select
-          defaultValue={papel}
-          disabled={pendente || (ehVoce && papel === 'admin')}
-          onChange={(e) => {
-            const novo = e.target.value
-            iniciar(() => definirPapel(usuarioId, novo))
-          }}
-          className="h-7 rounded-lg border bg-[var(--painel)] px-1.5 text-xs disabled:opacity-50"
-          title={ehVoce ? 'Você não pode remover o próprio admin' : `Definir tag de ${nome}`}
-        >
-          {PAPEIS.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-        {pendente && <Loader2 size={12} className="animate-spin" />}
-      </label>
+      <span className="text-xs suave">tags:</span>
+      {TAGS.map((t) => {
+        const ativo = local.includes(t.valor)
+        // admin não pode remover o próprio admin (evita se trancar pra fora)
+        const travado = ehVoce && t.valor === 'admin' && ativo
+        return (
+          <button
+            key={t.valor}
+            disabled={pendente || travado}
+            onClick={() =>
+              iniciar(async () => {
+                setLocal((atual) =>
+                  ativo ? atual.filter((p) => p !== t.valor) : [...atual, t.valor],
+                )
+                await alternarPapel(usuarioId, t.valor)
+              })
+            }
+            title={travado ? 'Você não pode remover o próprio admin' : `Alternar ${t.rotulo}`}
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors disabled:opacity-50 ${
+              ativo
+                ? 'border-fiap-500 bg-fiap-500/12 text-fiap-600 dark:text-fiap-400'
+                : 'suave hover:bg-[var(--painel-2)]'
+            }`}
+          >
+            {ativo && <Check size={11} />}
+            {t.rotulo}
+          </button>
+        )
+      })}
+      {pendente && <Loader2 size={12} className="animate-spin suave" />}
 
       <form
         action={renomearUsuario.bind(null, usuarioId)}
-        className="flex items-center gap-1"
+        className="ml-1 flex items-center gap-1"
         title="Corrigir nome exibido"
       >
         <Pencil size={12} className="suave" />

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { apagarMensagem, enviarMensagemComAnexo } from '@/lib/acoes'
 import type { Grupo, MensagemChat } from '@/lib/chat'
-import { Avatar, TagPapel, tamanhoLegivel } from './ui'
+import { Avatar, TagsPapel, tamanhoLegivel } from './ui'
 
 type Canal = { slug: string; nome: string; descricao: string }
 
@@ -75,7 +75,7 @@ export function Chat({
   canais: Canal[]
   grupos: Grupo[]
   historico: MensagemChat[]
-  usuario: { id: number; nome: string; papel: string }
+  usuario: { id: number; nome: string; papeis: string[] }
 }) {
   const [mensagens, setMensagens] = useState(historico)
   const [online, setOnline] = useState(false)
@@ -163,8 +163,10 @@ export function Chat({
     setTexto('')
     setAnexo(null)
     setErro(null)
-    setEspera(COOLDOWN)
+    if (!souModerador) setEspera(COOLDOWN)
   }
+
+  const souModerador = usuario.papeis.includes('admin') || usuario.papeis.includes('professor')
 
   const grupoAtual = grupos.find((g) => `g:${g.id}` === canal)
   const atual = canais.find((c) => c.slug === canal)
@@ -303,7 +305,7 @@ export function Chat({
                         <span className="text-sm font-semibold">
                           {m.usuario_id === usuario.id ? 'Você' : m.nome}
                         </span>
-                        <TagPapel papel={m.papel} mudo />
+                        <TagsPapel papeis={m.papeis} mudo />
                         <span className="text-[11px] suave" suppressHydrationWarning>
                           {hora(m.criado_em)}
                         </span>
@@ -314,7 +316,7 @@ export function Chat({
                     )}
                     <Anexo m={m} />
                   </div>
-                  {(m.usuario_id === usuario.id || usuario.papel === 'admin') && (
+                  {(m.usuario_id === usuario.id || usuario.papeis.includes('admin')) && (
                     <button
                       onClick={() => apagarMensagem(m.id)}
                       className="shrink-0 self-start p-1 opacity-0 transition-opacity suave hover:text-red-500 focus:opacity-100 group-hover:opacity-100"

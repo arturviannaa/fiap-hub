@@ -54,7 +54,7 @@ export function Shell({
   usuario,
   children,
 }: {
-  usuario: { id: number; nome: string; email: string; papel: string; foto: string | null }
+  usuario: { id: number; nome: string; email: string; papeis: string[]; foto: string | null }
   children: React.ReactNode
 }) {
   const caminho = usePathname()

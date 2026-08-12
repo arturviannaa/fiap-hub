@@ -7,7 +7,7 @@ export type Usuario = {
   id: number
   email: string
   nome: string
-  papel: 'aluno' | 'admin'
+  papeis: string[]
   bio: string
   foto: string | null
 }
@@ -18,6 +18,8 @@ const DOMINIOS = (process.env.ALLOWED_EMAIL_DOMAINS || 'fiap.com.br,alunos.fiap.
   .split(',')
   .map((d) => d.trim().toLowerCase())
   .filter(Boolean)
+
+export const ehAdmin = (u: { papeis: string[] }) => u.papeis.includes('admin')
 
 export function dominioPermitido(email: string) {
   const dominio = email.toLowerCase().split('@')[1]
@@ -36,7 +38,7 @@ function nomeDoEmail(email: string) {
 }
 
 export async function acharOuCriar(email: string, nome: string, provedor: string) {
-  const existente = await um<Usuario>('SELECT id, email, nome, papel, bio, foto FROM usuarios WHERE email = $1', [
+  const existente = await um<Usuario>('SELECT id, email, nome, papeis, bio, foto FROM usuarios WHERE email = $1', [
     email.toLowerCase(),
   ])
   if (existente) {
@@ -45,11 +47,12 @@ export async function acharOuCriar(email: string, nome: string, provedor: string
   }
   // Primeiro a entrar vira admin: alguem precisa moderar e nao ha console.
   const [{ total }] = await sql<{ total: string }>('SELECT count(*)::text AS total FROM usuarios')
-  const papel = total === '0' ? 'admin' : 'aluno'
+  // O primeiro a entrar vira admin (além de aluno): alguém precisa moderar.
+  const papeis = total === '0' ? ['aluno', 'admin'] : ['aluno']
   return um<Usuario>(
-    `INSERT INTO usuarios (email, nome, provedor, papel) VALUES ($1, $2, $3, $4)
-     RETURNING id, email, nome, papel, bio, foto`,
-    [email.toLowerCase(), nome || nomeDoEmail(email), provedor, papel],
+    `INSERT INTO usuarios (email, nome, provedor, papeis) VALUES ($1, $2, $3, $4)
+     RETURNING id, email, nome, papeis, bio, foto`,
+    [email.toLowerCase(), nome || nomeDoEmail(email), provedor, papeis],
   )
 }
 
@@ -62,13 +65,13 @@ const provedores = [
       const senha = String(dados?.senha || '')
       if (!email || !senha || !dominioPermitido(email)) return null
       const conta = await um<Usuario & { senha_hash: string | null }>(
-        'SELECT id, email, nome, papel, bio, foto, senha_hash FROM usuarios WHERE email = $1',
+        'SELECT id, email, nome, papeis, bio, foto, senha_hash FROM usuarios WHERE email = $1',
         [email],
       )
       if (!conta?.senha_hash) return null
       if (!(await bcrypt.compare(senha, conta.senha_hash))) return null
       await sql('UPDATE usuarios SET visto_em = now() WHERE id = $1', [conta.id])
-      return { id: String(conta.id), email: conta.email, name: conta.nome, papel: conta.papel }
+      return { id: String(conta.id), email: conta.email, name: conta.nome, papeis: conta.papeis }
     },
   }),
 ]
@@ -82,7 +85,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.uid = Number(user.id)
-        token.papel = (user as any).papel || 'aluno'
+        token.papeis = (user as any).papeis || ['aluno']
         token.name = user.name
       }
       return token
@@ -90,7 +93,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         ;(session.user as any).id = token.uid as number
-        ;(session.user as any).papel = token.papel as string
+        ;(session.user as any).papeis = token.papeis as string[]
       }
       return session
     },
@@ -102,7 +105,7 @@ export async function usuarioAtual(): Promise<Usuario> {
   const sessao = await auth()
   const id = (sessao?.user as any)?.id
   if (!id) throw new Error('nao autenticado')
-  const u = await um<Usuario>('SELECT id, email, nome, papel, bio, foto FROM usuarios WHERE id = $1', [id])
+  const u = await um<Usuario>('SELECT id, email, nome, papeis, bio, foto FROM usuarios WHERE id = $1', [id])
   if (!u) throw new Error('nao autenticado')
   return u
 }

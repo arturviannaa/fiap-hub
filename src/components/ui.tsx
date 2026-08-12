@@ -78,13 +78,29 @@ const PAPEL_ROTULO: Record<string, { texto: string; classe: string }> = {
   aluno: { texto: 'aluno', classe: 'bg-sky-500/12 text-sky-600 dark:text-sky-400' },
 }
 
-/** Tag de perfil exibida na turma e ao lado do nome no chat. */
-export function TagPapel({ papel, mudo }: { papel: string; mudo?: boolean }) {
-  const p = PAPEL_ROTULO[papel] ?? PAPEL_ROTULO.aluno
-  if (mudo && papel === 'aluno') return null
+// Ordem de exibição: admin e professor primeiro, aluno por último.
+const ORDEM_PAPEL = ['admin', 'professor', 'aluno']
+
+/** Tags de perfil (um usuário pode ter várias). `mudo` esconde 'aluno' —
+ *  útil no chat, onde só interessa destacar admin/professor. */
+export function TagsPapel({ papeis, mudo }: { papeis: string[]; mudo?: boolean }) {
+  const lista = [...new Set(papeis)]
+    .filter((p) => (mudo ? p !== 'aluno' : true))
+    .sort((a, b) => ORDEM_PAPEL.indexOf(a) - ORDEM_PAPEL.indexOf(b))
+  if (lista.length === 0) return null
   return (
-    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${p.classe}`}>
-      {p.texto}
+    <span className="inline-flex flex-wrap items-center gap-1">
+      {lista.map((papel) => {
+        const p = PAPEL_ROTULO[papel] ?? PAPEL_ROTULO.aluno
+        return (
+          <span
+            key={papel}
+            className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${p.classe}`}
+          >
+            {p.texto}
+          </span>
+        )
+      })}
     </span>
   )
 }

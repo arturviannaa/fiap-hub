@@ -4,7 +4,7 @@ import { sql } from '@/lib/db'
 import { todasAulas } from '@/lib/conteudo'
 import { Cabecalho } from '@/components/cabecalho'
 import { EditorPapel } from '@/components/editor-papel'
-import { Avatar, Selo, TagPapel, quando } from '@/components/ui'
+import { Avatar, Selo, TagsPapel, quando } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Turma' }
@@ -19,14 +19,14 @@ export default async function Turma() {
     nome: string
     email: string
     bio: string
-    papel: string
+    papeis: string[]
     foto: string | null
     visto_em: string
     aulas: string
     notas: string
     arquivos: string
   }>(
-    `SELECT u.id, u.nome, u.email, u.bio, u.papel, u.foto, u.visto_em,
+    `SELECT u.id, u.nome, u.email, u.bio, u.papeis, u.foto, u.visto_em,
             (SELECT count(*) FROM progresso p WHERE p.usuario_id = u.id)::text AS aulas,
             (SELECT count(*) FROM notas n WHERE n.usuario_id = u.id AND n.publica)::text AS notas,
             (SELECT count(*) FROM arquivos a WHERE a.usuario_id = u.id AND a.publico)::text AS arquivos
@@ -38,7 +38,7 @@ export default async function Turma() {
       <Cabecalho
         titulo="Turma"
         descricao={
-          u.papel === 'admin'
+          u.papeis.includes('admin')
             ? `${membros.length} pessoas. Como admin, você define as tags e pode corrigir nomes.`
             : `${membros.length} pessoas estudando por aqui.`
         }
@@ -61,7 +61,7 @@ export default async function Turma() {
                       <Trophy size={10} /> mais adiantado
                     </Selo>
                   )}
-                  <TagPapel papel={m.papel} />
+                  <TagsPapel papeis={m.papeis} />
                 </p>
                 <p className="truncate text-xs suave">{m.email}</p>
                 {m.bio && <p className="mt-1 text-sm">{m.bio}</p>}
@@ -74,8 +74,8 @@ export default async function Turma() {
                   {quando(m.visto_em)} atrás
                 </p>
 
-                {u.papel === 'admin' && (
-                  <EditorPapel usuarioId={m.id} papel={m.papel} nome={m.nome} ehVoce={m.id === u.id} />
+                {u.papeis.includes('admin') && (
+                  <EditorPapel usuarioId={m.id} papeis={m.papeis} nome={m.nome} ehVoce={m.id === u.id} />
                 )}
               </div>
             </li>
