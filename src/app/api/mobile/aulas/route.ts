@@ -8,7 +8,8 @@ export async function GET(req: Request) {
   const u = await usuarioDoToken(req)
   if (!u) return naoAutorizado()
 
-  const c = conteudo()
+  const disc = new URL(req.url).searchParams.get('disciplina') || 'python'
+  const c = conteudo(disc)
   const feitas = await sql<{ aula_slug: string }>('SELECT aula_slug FROM progresso WHERE usuario_id = $1', [u.id])
 
   return Response.json({
