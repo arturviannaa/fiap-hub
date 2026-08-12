@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
@@ -88,6 +90,27 @@ fun PerfilScreen(api: Api, sessao: Sessao, onConfig: () -> Unit) {
                     }
                 }
             }
+        }
+
+        Spacer(Modifier.height(20.dp))
+        val aulas = m.stats.aulas.toIntOrNull() ?: 0
+        val notas = m.stats.notas.toIntOrNull() ?: 0
+        val arquivos = m.stats.arquivos.toIntOrNull() ?: 0
+        val mensagens = m.stats.mensagens.toIntOrNull() ?: 0
+        val conquistas = listOf(
+            Conquista("🎯", "Primeira aula", aulas >= 1),
+            Conquista("🔥", "5 aulas", aulas >= 5),
+            Conquista("📚", "Na metade", m.total > 0 && aulas >= m.total / 2),
+            Conquista("🏆", "Tudo feito", m.total > 0 && aulas >= m.total),
+            Conquista("✍️", "Anotador", notas >= 3),
+            Conquista("📎", "Compartilhou", arquivos >= 1),
+            Conquista("💬", "Tagarela", mensagens >= 20),
+        )
+        val quantas = conquistas.count { it.desbloqueada }
+        Text("Conquistas · $quantas/${conquistas.size}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Spacer(Modifier.height(10.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            items(conquistas) { BadgeConquista(it) }
         }
 
         Spacer(Modifier.weight(1f))
