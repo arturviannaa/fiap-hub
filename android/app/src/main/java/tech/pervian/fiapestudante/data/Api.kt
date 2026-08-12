@@ -7,9 +7,12 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody as bytesToBody
 import java.util.concurrent.TimeUnit
 
 // Mesmo servidor do site — o app é só outro cliente do mesmo backend, então os
@@ -150,6 +153,26 @@ class Api(private val sessao: Sessao) {
         cliente.newCall(req("/api/mobile/notas/apagar").post(body).build()).execute().close()
     }
     suspend fun materiais(aba: String): RespMateriais = get("/api/mobile/materiais?aba=$aba")
+
+    suspend fun enviarMaterial(nome: String, mime: String, bytes: ByteArray, descricao: String, publico: Boolean): Boolean =
+        withContext(Dispatchers.IO) {
+            val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("arquivo", nome, bytes.toRequestBody(mime.toMediaTypeOrNull()))
+                .addFormDataPart("descricao", descricao)
+                .addFormDataPart("publico", if (publico) "publico" else "privado")
+                .build()
+            cliente.newCall(req("/api/mobile/materiais").post(body).build()).execute().use { it.isSuccessful }
+        }
+
+    suspend fun enviarAnexo(canal: String, corpo: String, nome: String, mime: String, bytes: ByteArray): Boolean =
+        withContext(Dispatchers.IO) {
+            val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("canal", canal)
+                .addFormDataPart("corpo", corpo)
+                .addFormDataPart("anexo", nome, bytes.toRequestBody(mime.toMediaTypeOrNull()))
+                .build()
+            cliente.newCall(req("/api/mobile/chat/anexo").post(body).build()).execute().use { it.isSuccessful }
+        }
 
     suspend fun heartbeat(): Unit = withContext(Dispatchers.IO) {
         runCatching {
