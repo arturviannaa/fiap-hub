@@ -12,10 +12,12 @@ WORKDIR /app
 RUN apk add --no-cache git
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Clona o repo da disciplina para gerar o conteudo-semente da imagem. Em runtime
-# o servico de sync mantem isso atualizado no volume.
-ARG REPO_CONTEUDO=https://github.com/mariacmartins/computational_thinking_with_python
-RUN rm -rf repo && git clone "$REPO_CONTEUDO" repo && npm run build
+# Clona os repos das disciplinas para gerar o conteudo-semente da imagem. Em
+# runtime o servico de sync mantem isso atualizado no volume.
+RUN rm -rf repos && mkdir -p repos \
+ && git clone https://github.com/mariacmartins/computational_thinking_with_python repos/python \
+ && git clone https://github.com/gsalati/Edge-Computing-Computer-Systems repos/edge \
+ && npm run build
 
 # ---- servico de sync do conteudo ------------------------------------------
 FROM node:22-alpine AS sync

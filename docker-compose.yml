@@ -61,10 +61,10 @@ services:
       APP_INTERNO_URL: http://app:3000
     volumes:
       - conteudo:/app/content
-      - repo-disciplina:/app/repo
+      - repos-disciplinas:/app/repos
 
 volumes:
   dados-postgres:
   conteudo:
   uploads:
-  repo-disciplina:
+  repos-disciplinas:
