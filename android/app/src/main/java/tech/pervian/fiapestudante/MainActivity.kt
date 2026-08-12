@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
@@ -111,11 +113,12 @@ fun AppPrincipal(api: Api, sessao: Sessao, tema: String, onTema: (String) -> Uni
     val ctx = LocalContext.current
     val abas = listOf(
         Aba("aulas", "Aulas", Icons.AutoMirrored.Filled.MenuBook),
+        Aba("anotacoes", "Notas", Icons.AutoMirrored.Filled.EventNote),
+        Aba("materiais", "Materiais", Icons.Filled.FolderOpen),
         Aba("chat", "Chat", Icons.Filled.Chat),
         Aba("grupos", "Grupos", Icons.Filled.Lock),
-        Aba("turma", "Turma", Icons.Filled.Groups),
-        Aba("perfil", "Perfil", Icons.Filled.Person),
     )
+    val eu = sessao.usuario
 
     LaunchedEffect(Unit) { Push.registrar(ctx) }
     LaunchedEffect(Unit) { while (isActive) { api.heartbeat(); delay(45_000) } }
@@ -156,7 +159,13 @@ fun AppPrincipal(api: Api, sessao: Sessao, tema: String, onTema: (String) -> Uni
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("FIAP Estudante", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { nav.navigate("perfil") }) {
+                        Avatar(eu?.nome ?: "", eu?.id ?: 0, eu?.foto, sessao.token, 30)
+                    }
+                },
                 actions = {
+                    IconButton(onClick = { nav.navigate("turma") }) { Icon(Icons.Filled.Groups, "Turma") }
                     IconButton(onClick = { nav.navigate("notif") }) {
                         BadgedBox(badge = { if (naoLidas > 0) Badge { Text("$naoLidas") } }) {
                             Icon(Icons.Filled.Notifications, "Notificações")
@@ -189,6 +198,8 @@ fun AppPrincipal(api: Api, sessao: Sessao, tema: String, onTema: (String) -> Uni
             composable("aula/{slug}") {
                 AulaScreen(api, sessao, it.arguments?.getString("slug") ?: "", onVoltar = { nav.popBackStack() }, onAula = { s -> nav.navigate("aula/$s") })
             }
+            composable("anotacoes") { AnotacoesScreen(api, sessao) }
+            composable("materiais") { MateriaisScreen(api, sessao) }
             composable("chat") { ChatScreen(api, sessao, onAbrirPerfil = { nav.navigate("u/$it") }) }
             composable("grupo/{id}") {
                 val gid = it.arguments?.getString("id") ?: ""
