@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { auth, dominiosTexto, microsoftAtivo } from '@/lib/auth'
+import { auth, dominiosTexto } from '@/lib/auth'
 import { FormEntrar } from '@/components/form-auth'
 import { BotaoMicrosoft } from '@/components/botao-microsoft'
 
@@ -10,6 +10,8 @@ const MENSAGENS: Record<string, string> = {
   dominio: `Essa conta não é institucional. Entre com seu e-mail ${dominiosTexto}.`,
   CredentialsSignin: 'E-mail ou senha incorretos.',
   AccessDenied: 'Acesso negado para essa conta.',
+  microsoft:
+    'O login com Microsoft ainda não foi ativado nesta instalação — falta registrar o app no Entra ID. Use e-mail e senha por enquanto.',
 }
 
 export default async function Entrar({
@@ -32,16 +34,12 @@ export default async function Entrar({
       <h1 className="text-2xl font-semibold tracking-tight">Entrar na plataforma</h1>
       <p className="mb-6 mt-1 text-sm suave">Acesso restrito à turma, com e-mail {dominiosTexto}.</p>
 
-      {microsoftAtivo && (
-        <>
-          <BotaoMicrosoft />
-          <div className="my-5 flex items-center gap-3 text-xs suave">
-            <div className="h-px flex-1 bg-[var(--borda)]" />
-            ou com senha
-            <div className="h-px flex-1 bg-[var(--borda)]" />
-          </div>
-        </>
-      )}
+      <BotaoMicrosoft />
+      <div className="my-5 flex items-center gap-3 text-xs suave">
+        <div className="h-px flex-1 bg-[var(--borda)]" />
+        ou com senha
+        <div className="h-px flex-1 bg-[var(--borda)]" />
+      </div>
 
       <FormEntrar erroInicial={erro} />
     </div>

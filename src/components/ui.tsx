@@ -116,10 +116,11 @@ export function quando(data: string | Date) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
-export function tamanhoLegivel(bytes: number) {
+// bytes chega como string quando vem do Postgres (BIGINT vira string no pg).
+export function tamanhoLegivel(bytes: number | string) {
   const u = ['B', 'KB', 'MB', 'GB']
   let i = 0
-  let n = bytes
+  let n = Number(bytes)
   while (n >= 1024 && i < u.length - 1) {
     n /= 1024
     i++

@@ -123,7 +123,9 @@ export function Chat({
                 {novoDia && (
                   <div className="my-4 flex items-center gap-3">
                     <div className="h-px flex-1 bg-[var(--borda)]" />
-                    <span className="text-[11px] uppercase tracking-wide suave">{dia(m.criado_em)}</span>
+                    <span className="text-[11px] uppercase tracking-wide suave" suppressHydrationWarning>
+                      {dia(m.criado_em)}
+                    </span>
                     <div className="h-px flex-1 bg-[var(--borda)]" />
                   </div>
                 )}
@@ -137,7 +139,9 @@ export function Chat({
                         <span className="text-sm font-semibold">
                           {m.usuario_id === usuario.id ? 'Você' : m.nome}
                         </span>
-                        <span className="text-[11px] suave">{hora(m.criado_em)}</span>
+                        <span className="text-[11px] suave" suppressHydrationWarning>
+                          {hora(m.criado_em)}
+                        </span>
                       </p>
                     )}
                     <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{m.corpo}</p>

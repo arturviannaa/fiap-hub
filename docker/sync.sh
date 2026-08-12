@@ -12,12 +12,14 @@ export CONTENT_OUT=/app/content
 
 while true; do
   if [ -d "$FONTE/.git" ]; then
-    git -C "$FONTE" fetch --depth 1 origin HEAD 2>&1 && git -C "$FONTE" reset --hard FETCH_HEAD 2>&1
+    git -C "$FONTE" fetch origin HEAD 2>&1 && git -C "$FONTE" reset --hard FETCH_HEAD 2>&1
   else
     # $FONTE e o mountpoint do volume: da para esvaziar, nao para remover.
     mkdir -p "$FONTE"
     find "$FONTE" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-    git clone --depth 1 "$REPO" "$FONTE" 2>&1
+    # historico completo (repo tem poucos MB): o "atualizado em" de cada aula
+    # sai de `git log` por arquivo, e um clone raso daria a mesma data a todas.
+    git clone "$REPO" "$FONTE" 2>&1
   fi
 
   ANTES=$(git -C "$FONTE" rev-parse --short HEAD 2>/dev/null || echo '?')
