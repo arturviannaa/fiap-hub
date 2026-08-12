@@ -36,7 +36,7 @@ fun AulasScreen(api: Api, sessao: Sessao, disc: String, onAbrirAula: (String) ->
 
     val d = dados
     if (erro != null) { CentroTexto(erro!!); return }
-    if (d == null) { Carregando(); return }
+    if (d == null) { CarregandoLista(); return }
 
     val slugsDaDisc = d.modulos.flatMap { it.aulas }.map { it.slug }.toSet()
     val feitas = d.concluidas.filter { it in slugsDaDisc }.toSet()

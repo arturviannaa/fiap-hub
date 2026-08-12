@@ -31,7 +31,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -68,6 +71,7 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
     val euId = sessao.usuario?.id ?: -1
     val souAdmin = sessao.usuario?.papeis?.contains("admin") == true
     var apagar by remember { mutableStateOf<Int?>(null) }
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(canal) {
         dados = try { api.chat(canal, disc) } catch (e: Exception) { null }
@@ -93,6 +97,7 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
         val corpo = texto.trim()
         if (corpo.isEmpty()) return
         texto = ""
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         escopo.launch { runCatching { api.enviar(canal, corpo) } }
     }
 
@@ -112,28 +117,40 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
             items(mensagens.size) { i ->
                 val m = mensagens[i]
                 val meu = m.usuario_id == euId
+                val dia = m.criado_em.substringBefore('T')
+                val diaAnterior = if (i > 0) mensagens[i - 1].criado_em.substringBefore('T') else ""
+                if (dia != diaAnterior && dia.isNotEmpty()) SeparadorDia(dia)
+                val corBolha = if (meu) FiapMagenta else MaterialTheme.colorScheme.surfaceVariant
+                val corTexto = if (meu) Color.White else MaterialTheme.colorScheme.onSurface
+                val forma = if (meu) RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
+                            else RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp)
                 Row(
-                    Modifier.fillMaxWidth().padding(vertical = 4.dp).combinedClickable(
-                        onClick = {},
-                        onLongClick = { if (meu || souAdmin) apagar = m.id },
-                    ),
+                    Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                    horizontalArrangement = if (meu) Arrangement.End else Arrangement.Start,
                 ) {
-                    Box(Modifier.clickable { onAbrirPerfil(m.usuario_id) }) {
-                        Avatar(m.nome, m.usuario_id, m.foto, sessao.token, 34)
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                            if (meu) "Você" else m.nome,
-                            fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
-                            modifier = Modifier.clickable { onAbrirPerfil(m.usuario_id) },
-                        )
-                            Spacer(Modifier.width(6.dp))
-                            Tags(m.papeis, mudo = true)
-                            Text(hora(m.criado_em), color = Color.Gray, fontSize = 11.sp)
+                    if (!meu) {
+                        Box(Modifier.clickable { onAbrirPerfil(m.usuario_id) }) {
+                            Avatar(m.nome, m.usuario_id, m.foto, sessao.token, 32)
                         }
-                        if (m.corpo.isNotEmpty()) Text(m.corpo, fontSize = 14.sp)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Column(
+                        Modifier.widthIn(max = 300.dp).clip(forma).background(corBolha)
+                            .combinedClickable(onClick = {}, onLongClick = { if (meu || souAdmin) apagar = m.id })
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    ) {
+                        if (!meu) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    m.nome, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = FiapMagenta,
+                                    modifier = Modifier.clickable { onAbrirPerfil(m.usuario_id) },
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Tags(m.papeis, mudo = true)
+                            }
+                            Spacer(Modifier.height(2.dp))
+                        }
+                        if (m.corpo.isNotEmpty()) Text(m.corpo, fontSize = 14.sp, color = corTexto)
                         if (m.arquivo_id != null) {
                             val ehImg = m.arquivo_mime?.startsWith("image/") == true
                             if (ehImg) {
@@ -148,11 +165,17 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
                                 )
                             } else {
                                 Text(
-                                    "📎 ${m.arquivo_nome ?: "anexo"}", color = FiapMagenta, fontSize = 13.sp,
+                                    "📎 ${m.arquivo_nome ?: "anexo"}",
+                                    color = if (meu) Color.White else FiapMagenta, fontSize = 13.sp,
                                     modifier = Modifier.padding(top = 2.dp).clickable { baixarAnexo(ctx, sessao.token, m.arquivo_id!!, m.arquivo_nome ?: "anexo") },
                                 )
                             }
                         }
+                        Text(
+                            hora(m.criado_em),
+                            color = if (meu) Color.White.copy(alpha = 0.75f) else Color.Gray,
+                            fontSize = 10.sp, modifier = Modifier.align(Alignment.End).padding(top = 2.dp),
+                        )
                     }
                 }
             }
@@ -206,6 +229,26 @@ private fun ChipCanal(rotulo: String, ativo: Boolean, onClick: () -> Unit) {
             .padding(horizontal = 14.dp, vertical = 8.dp),
     ) {
         Text(rotulo, color = if (ativo) FiapMagenta else Color.Gray, fontWeight = if (ativo) FontWeight.SemiBold else FontWeight.Normal, fontSize = 14.sp)
+    }
+}
+
+private val MESES = listOf("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")
+
+private fun diaLegivel(iso: String): String {
+    val p = iso.split("-")
+    if (p.size < 3) return iso
+    val mes = p[1].toIntOrNull() ?: return iso
+    val d = p[2].toIntOrNull() ?: return iso
+    return "$d de ${MESES.getOrElse(mes - 1) { "" }}"
+}
+
+@Composable
+private fun SeparadorDia(iso: String) {
+    Box(Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(horizontal = 12.dp, vertical = 4.dp),
+        ) { Text(diaLegivel(iso), fontSize = 11.sp, color = Color.Gray, textAlign = TextAlign.Center) }
     }
 }
 

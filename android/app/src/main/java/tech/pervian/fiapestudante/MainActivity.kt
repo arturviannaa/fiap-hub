@@ -26,7 +26,10 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,9 +77,21 @@ class MainActivity : ComponentActivity() {
                 ) pedirPermissao.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
 
-            MaterialTheme(
-                colorScheme = if (escuro) darkColorScheme(primary = FiapMagenta) else lightColorScheme(primary = FiapMagenta),
-            ) {
+            val esquema = if (escuro) darkColorScheme(
+                primary = FiapMagenta,
+                background = Color(0xFF0B0C10),
+                surface = Color(0xFF15171E),
+                surfaceVariant = Color(0xFF20232C),
+                onBackground = Color(0xFFECEEF4),
+                onSurface = Color(0xFFECEEF4),
+                onSurfaceVariant = Color(0xFFB6BAC6),
+            ) else lightColorScheme(
+                primary = FiapMagenta,
+                background = Color(0xFFF7F8FA),
+                surface = Color(0xFFFFFFFF),
+                surfaceVariant = Color(0xFFEEF0F4),
+            )
+            MaterialTheme(colorScheme = esquema) {
                 CompositionLocalProvider(LocalTemaEscuro provides escuro) {
                     if (tema == null) {
                         DialogTema { escolhido -> sessao.tema = escolhido; tema = escolhido }
@@ -117,6 +132,7 @@ private data class Aba(val rota: String, val rotulo: String, val icone: ImageVec
 fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (String) -> Unit, onTrocarDisciplina: () -> Unit, aoSair: () -> Unit) {
     val nav = rememberNavController()
     val ctx = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val abas = listOf(
         Aba("aulas", "Aulas", Icons.AutoMirrored.Filled.MenuBook),
         Aba("anotacoes", "Notas", Icons.AutoMirrored.Filled.EventNote),
@@ -194,7 +210,10 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
                 abas.forEach { aba ->
                     NavigationBarItem(
                         selected = atual == aba.rota,
-                        onClick = { nav.navigate(aba.rota) { popUpTo("aulas"); launchSingleTop = true } },
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            nav.navigate(aba.rota) { popUpTo("aulas"); launchSingleTop = true }
+                        },
                         icon = { Icon(aba.icone, aba.rotulo) },
                         label = { Text(aba.rotulo, fontSize = androidx.compose.ui.unit.TextUnit.Unspecified) },
                         colors = NavigationBarItemDefaults.colors(
@@ -206,7 +225,13 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
             }
         },
     ) { pad ->
-        NavHost(nav, startDestination = "aulas", modifier = Modifier.padding(pad)) {
+        NavHost(
+            nav, startDestination = "aulas", modifier = Modifier.padding(pad),
+            enterTransition = { androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(220)) + androidx.compose.animation.slideInVertically(androidx.compose.animation.core.tween(220)) { it / 14 } },
+            exitTransition = { androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(160)) },
+            popEnterTransition = { androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(220)) },
+            popExitTransition = { androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(160)) },
+        ) {
             composable("aulas") { AulasScreen(api, sessao, disc, onAbrirAula = { nav.navigate("aula/$it") }) }
             composable("aula/{slug}") {
                 AulaScreen(api, sessao, it.arguments?.getString("slug") ?: "", onVoltar = { nav.popBackStack() }, onAula = { s -> nav.navigate("aula/$s") })

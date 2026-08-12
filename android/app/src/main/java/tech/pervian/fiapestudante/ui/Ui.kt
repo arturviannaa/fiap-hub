@@ -1,13 +1,27 @@
 package tech.pervian.fiapestudante.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -15,11 +29,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -27,6 +49,8 @@ import coil.request.ImageRequest
 import tech.pervian.fiapestudante.data.BASE_URL
 
 val FiapMagenta = Color(0xFFED145B)
+val FiapRosa = Color(0xFFFB7099)
+val FiapGradiente = listOf(FiapMagenta, FiapRosa)
 
 private val cores = listOf(
     0xFFED145B, 0xFF7C5CFF, 0xFF0EA5E9, 0xFF10B981, 0xFFF59E0B, 0xFFEF4444, 0xFF8B5CF6, 0xFF14B8A6,
@@ -88,27 +112,84 @@ fun Modifier.clickableSemRipple(onClick: () -> Unit): Modifier =
     this.clickable(interactionSource = MutableInteractionSource(), indication = null, onClick = onClick)
 
 // Anel de progresso animado com gradiente FIAP e % no centro.
-@androidx.compose.runtime.Composable
-fun AnelProgresso(pct: Float, tamanho: androidx.compose.ui.unit.Dp = 96.dp, stroke: androidx.compose.ui.unit.Dp = 9.dp) {
+@Composable
+fun AnelProgresso(pct: Float, tamanho: Dp = 96.dp, stroke: Dp = 9.dp) {
     val alvo = pct.coerceIn(0f, 1f)
     val anim by androidx.compose.animation.core.animateFloatAsState(
         targetValue = alvo,
-        animationSpec = androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        animationSpec = tween(900, easing = androidx.compose.animation.core.FastOutSlowInEasing),
         label = "anel",
     )
-    androidx.compose.foundation.layout.Box(
-        androidx.compose.ui.Modifier.size(tamanho),
-        contentAlignment = androidx.compose.ui.Alignment.Center,
-    ) {
+    Box(Modifier.size(tamanho), contentAlignment = Alignment.Center) {
         val trilho = Color(0x22808080)
-        val grad = androidx.compose.ui.graphics.Brush.sweepGradient(listOf(FiapMagenta, Color(0xFFFB7099), FiapMagenta))
-        androidx.compose.foundation.Canvas(androidx.compose.ui.Modifier.size(tamanho)) {
+        val grad = Brush.sweepGradient(listOf(FiapMagenta, FiapRosa, FiapMagenta))
+        Canvas(Modifier.size(tamanho)) {
             val w = stroke.toPx()
-            androidx.compose.ui.graphics.drawscope.Stroke(w, cap = androidx.compose.ui.graphics.StrokeCap.Round).let { st ->
+            Stroke(w, cap = StrokeCap.Round).let { st ->
                 drawArc(trilho, 0f, 360f, false, style = st)
                 drawArc(grad, -90f, 360f * anim, false, style = st)
             }
         }
         Text("${(anim * 100).toInt()}%", fontWeight = FontWeight.Bold, fontSize = (tamanho.value * 0.19).sp)
+    }
+}
+
+// ---- Skeletons (shimmer) --------------------------------------------------
+
+@Composable
+fun ShimmerBox(modifier: Modifier, shape: Shape = RoundedCornerShape(8.dp)) {
+    val tr = rememberInfiniteTransition(label = "shimmer")
+    val p by tr.animateFloat(
+        0f, 1f,
+        infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Restart),
+        label = "p",
+    )
+    val escuro = tech.pervian.fiapestudante.LocalTemaEscuro.current
+    val c0 = if (escuro) Color(0xFF20232B) else Color(0xFFE9EAEE)
+    val c1 = if (escuro) Color(0xFF2E323C) else Color(0xFFF6F7F9)
+    val brush = Brush.linearGradient(
+        colors = listOf(c0, c1, c0),
+        start = Offset(-260f + p * 680f, 0f),
+        end = Offset(p * 680f, 0f),
+    )
+    Box(modifier.clip(shape).background(brush))
+}
+
+// Lista de placeholders enquanto carrega (no lugar do spinner).
+@Composable
+fun CarregandoLista(linhas: Int = 7) {
+    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        repeat(linhas) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ShimmerBox(Modifier.size(42.dp), CircleShape)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    ShimmerBox(Modifier.fillMaxWidth(0.55f).height(14.dp))
+                    Spacer(Modifier.height(8.dp))
+                    ShimmerBox(Modifier.fillMaxWidth(0.85f).height(10.dp))
+                }
+            }
+        }
+    }
+}
+
+// ---- Conquistas (badges) --------------------------------------------------
+
+data class Conquista(val emoji: String, val titulo: String, val desbloqueada: Boolean)
+
+@Composable
+fun BadgeConquista(c: Conquista) {
+    val a = if (c.desbloqueada) 1f else 0.4f
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(78.dp)) {
+        Box(
+            Modifier.size(56.dp).clip(CircleShape)
+                .background(if (c.desbloqueada) FiapMagenta.copy(alpha = 0.14f) else Color.Gray.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) { Text(c.emoji, fontSize = 26.sp, modifier = Modifier.alpha(a)) }
+        Spacer(Modifier.height(5.dp))
+        Text(
+            c.titulo, fontSize = 10.sp, lineHeight = 12.sp, textAlign = TextAlign.Center, maxLines = 2,
+            color = if (c.desbloqueada) MaterialTheme.colorScheme.onSurface else Color.Gray,
+        )
     }
 }

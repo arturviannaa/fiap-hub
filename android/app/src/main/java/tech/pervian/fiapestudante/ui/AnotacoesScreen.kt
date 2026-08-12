@@ -47,7 +47,7 @@ fun AnotacoesScreen(api: Api, sessao: Sessao, disc: String) {
                 Tab(selected = aba == "turma", onClick = { aba = "turma" }, text = { Text("Da turma") })
             }
             val d = dados
-            if (d == null) { Carregando(); return@Column }
+            if (d == null) { CarregandoLista(); return@Column }
             if (d.notas.isEmpty()) {
                 CentroTexto(if (aba == "minhas") "Você ainda não tem anotações." else "Ninguém compartilhou anotações ainda.")
                 return@Column

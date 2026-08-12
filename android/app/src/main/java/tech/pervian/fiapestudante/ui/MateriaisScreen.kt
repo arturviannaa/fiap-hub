@@ -86,7 +86,7 @@ fun MateriaisScreen(api: Api, sessao: Sessao, disc: String) {
                 Tab(selected = aba == "meus", onClick = { aba = "meus" }, text = { Text("Meus") })
             }
             val d = dados
-            if (d == null) { Carregando(); return@Column }
+            if (d == null) { CarregandoLista(); return@Column }
             if (d.materiais.isEmpty()) { CentroTexto("Nenhum material aqui ainda. Toque em Enviar."); return@Column }
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp)) {
                 items(d.materiais) { m ->
