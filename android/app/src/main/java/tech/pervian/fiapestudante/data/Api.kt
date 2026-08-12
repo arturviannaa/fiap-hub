@@ -187,6 +187,16 @@ class Api(private val sessao: Sessao) {
             cliente.newCall(req("/api/mobile/chat/anexo").post(body).build()).execute().use { it.isSuccessful }
         }
 
+    suspend fun enviarFoto(mime: String, bytes: ByteArray): String? = withContext(Dispatchers.IO) {
+        val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .addFormDataPart("foto", "foto", bytes.toRequestBody(mime.toMediaTypeOrNull()))
+            .build()
+        cliente.newCall(req("/api/mobile/foto").post(body).build()).execute().use { r ->
+            if (!r.isSuccessful) null
+            else runCatching { JSON.decodeFromString<Map<String, String>>(r.body?.string() ?: "{}")["foto"] }.getOrNull()
+        }
+    }
+
     suspend fun heartbeat(): Unit = withContext(Dispatchers.IO) {
         runCatching {
             cliente.newCall(req("/api/mobile/presenca").post("".toRequestBody()).build()).execute().close()

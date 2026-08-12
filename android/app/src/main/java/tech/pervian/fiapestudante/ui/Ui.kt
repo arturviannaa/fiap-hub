@@ -1,5 +1,6 @@
 package tech.pervian.fiapestudante.ui
 
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -85,3 +86,29 @@ fun corDoModulo() = FiapMagenta
 // Clique sem o efeito ripple (usado no título/switcher da top bar).
 fun Modifier.clickableSemRipple(onClick: () -> Unit): Modifier =
     this.clickable(interactionSource = MutableInteractionSource(), indication = null, onClick = onClick)
+
+// Anel de progresso animado com gradiente FIAP e % no centro.
+@androidx.compose.runtime.Composable
+fun AnelProgresso(pct: Float, tamanho: androidx.compose.ui.unit.Dp = 96.dp, stroke: androidx.compose.ui.unit.Dp = 9.dp) {
+    val alvo = pct.coerceIn(0f, 1f)
+    val anim by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = alvo,
+        animationSpec = androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "anel",
+    )
+    androidx.compose.foundation.layout.Box(
+        androidx.compose.ui.Modifier.size(tamanho),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
+    ) {
+        val trilho = Color(0x22808080)
+        val grad = androidx.compose.ui.graphics.Brush.sweepGradient(listOf(FiapMagenta, Color(0xFFFB7099), FiapMagenta))
+        androidx.compose.foundation.Canvas(androidx.compose.ui.Modifier.size(tamanho)) {
+            val w = stroke.toPx()
+            androidx.compose.ui.graphics.drawscope.Stroke(w, cap = androidx.compose.ui.graphics.StrokeCap.Round).let { st ->
+                drawArc(trilho, 0f, 360f, false, style = st)
+                drawArc(grad, -90f, 360f * anim, false, style = st)
+            }
+        }
+        Text("${(anim * 100).toInt()}%", fontWeight = FontWeight.Bold, fontSize = (tamanho.value * 0.19).sp)
+    }
+}
