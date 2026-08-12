@@ -47,6 +47,24 @@ CREATE TABLE IF NOT EXISTS arquivos (
 );
 CREATE INDEX IF NOT EXISTS arquivos_aula_idx ON arquivos (aula_slug);
 
+-- Grupos privados criados pelos proprios alunos. O chat do grupo usa o mesmo
+-- mecanismo dos canais fixos: o canal se chama 'g:<id>'.
+CREATE TABLE IF NOT EXISTS grupos (
+  id         SERIAL PRIMARY KEY,
+  nome       TEXT NOT NULL,
+  descricao  TEXT NOT NULL DEFAULT '',
+  criador_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  criado_em  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS grupo_membros (
+  grupo_id   INTEGER NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  entrou_em  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (grupo_id, usuario_id)
+);
+CREATE INDEX IF NOT EXISTS grupo_membros_usuario_idx ON grupo_membros (usuario_id);
+
 CREATE TABLE IF NOT EXISTS mensagens (
   id          SERIAL PRIMARY KEY,
   canal       TEXT NOT NULL,
@@ -56,15 +74,25 @@ CREATE TABLE IF NOT EXISTS mensagens (
 );
 CREATE INDEX IF NOT EXISTS mensagens_canal_idx ON mensagens (canal, id DESC);
 
+-- Anexo da mensagem (print, PDF, .py). Reaproveita a tabela arquivos, entao
+-- upload, quota e download passam pelo mesmo caminho ja testado.
+ALTER TABLE mensagens ADD COLUMN IF NOT EXISTS arquivo_id INTEGER REFERENCES arquivos(id) ON DELETE SET NULL;
+
+
 -- Dispara o NOTIFY que alimenta o SSE do chat. Sem Redis, sem WebSocket server:
--- o proprio Postgres e o barramento de eventos.
+-- o proprio Postgres e o barramento de eventos. Delecao vai pelo mesmo canal,
+-- senao a mensagem apagada continuaria na tela de quem ja estava com o chat aberto.
 CREATE OR REPLACE FUNCTION notifica_mensagem() RETURNS TRIGGER AS $$
 BEGIN
-  PERFORM pg_notify('chat', NEW.id::text || ':' || NEW.canal);
+  IF TG_OP = 'DELETE' THEN
+    PERFORM pg_notify('chat', 'del:' || OLD.id::text || ':' || OLD.canal);
+    RETURN OLD;
+  END IF;
+  PERFORM pg_notify('chat', 'nova:' || NEW.id::text || ':' || NEW.canal);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS mensagens_notifica ON mensagens;
-CREATE TRIGGER mensagens_notifica AFTER INSERT ON mensagens
+CREATE TRIGGER mensagens_notifica AFTER INSERT OR DELETE ON mensagens
   FOR EACH ROW EXECUTE FUNCTION notifica_mensagem();

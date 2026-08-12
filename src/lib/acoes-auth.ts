@@ -4,6 +4,7 @@ import { AuthError } from 'next-auth'
 import bcrypt from 'bcryptjs'
 import { sql, um } from './db'
 import { acharOuCriar, dominioPermitido, dominiosTexto, signIn } from './auth'
+import { limparTexto, permitido } from './limites'
 
 export type EstadoForm = { erro?: string } | null
 
@@ -22,7 +23,7 @@ export async function entrar(_estado: EstadoForm, dados: FormData): Promise<Esta
 
 export async function cadastrar(_estado: EstadoForm, dados: FormData): Promise<EstadoForm> {
   const email = String(dados.get('email') || '').trim().toLowerCase()
-  const nome = String(dados.get('nome') || '').trim()
+  const nome = limparTexto(String(dados.get('nome') || ''), 60)
   const senha = String(dados.get('senha') || '')
   const convite = String(dados.get('convite') || '').trim()
 

@@ -7,6 +7,7 @@ import {
   BookOpen,
   Files,
   LayoutDashboard,
+  Lock,
   LogOut,
   Menu,
   MessageSquare,
@@ -25,6 +26,7 @@ const LINKS = [
   { href: '/anotacoes', rotulo: 'Anotações', Icone: NotebookPen },
   { href: '/arquivos', rotulo: 'Materiais', Icone: Files },
   { href: '/chat', rotulo: 'Chat', Icone: MessageSquare },
+  { href: '/grupos', rotulo: 'Grupos', Icone: Lock },
   { href: '/turma', rotulo: 'Turma', Icone: Users },
 ]
 

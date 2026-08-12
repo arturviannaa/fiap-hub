@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { barramento, canalValido, type MensagemChat } from '@/lib/chat'
+import { SELECT_MENSAGEM, barramento, canalPermitido, type MensagemChat } from '@/lib/chat'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,10 +8,11 @@ export const dynamic = 'force-dynamic'
 // NOTIFY no Postgres e quem avisa este processo.
 export async function GET(req: Request, ctx: { params: Promise<{ canal: string }> }) {
   const sessao = await auth()
-  if (!(sessao?.user as any)?.id) return new Response('não autenticado', { status: 401 })
+  const usuarioId = (sessao?.user as any)?.id
+  if (!usuarioId) return new Response('não autenticado', { status: 401 })
 
   const { canal } = await ctx.params
-  if (!canalValido(canal)) return new Response('canal inválido', { status: 404 })
+  if (!(await canalPermitido(canal, usuarioId))) return new Response('sem acesso', { status: 403 })
 
   const bus = barramento()
   const codificador = new TextEncoder()
@@ -23,14 +24,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ canal: string }
         if (vivo) controller.enqueue(codificador.encode(`data: ${JSON.stringify(dado)}\n\n`))
       }
 
-      const aoNotificar = async ({ id, canal: c }: { id: number; canal: string }) => {
+      const aoNotificar = async ({ op, id, canal: c }: { op: string; id: number; canal: string }) => {
         if (c !== canal || !vivo) return
-        const [msg] = await sql<MensagemChat>(
-          `SELECT m.id, m.canal, m.corpo, m.criado_em, m.usuario_id, u.nome
-           FROM mensagens m JOIN usuarios u ON u.id = m.usuario_id WHERE m.id = $1`,
-          [id],
-        )
-        if (msg) enviar(msg)
+        if (op === 'del') return enviar({ op: 'del', id })
+        const [msg] = await sql<MensagemChat>(`${SELECT_MENSAGEM} WHERE m.id = $1`, [id])
+        if (msg) enviar({ op: 'nova', msg })
       }
 
       // Primeiro byte imediato: sem ele o proxy so libera os headers na

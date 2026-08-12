@@ -72,6 +72,23 @@ export function Selo({ children, tom = 'neutro' }: { children: ReactNode; tom?: 
   )
 }
 
+const PAPEL_ROTULO: Record<string, { texto: string; classe: string }> = {
+  admin: { texto: 'admin', classe: 'bg-fiap-500/15 text-fiap-600 dark:text-fiap-400' },
+  professor: { texto: 'professor', classe: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' },
+  aluno: { texto: 'aluno', classe: 'bg-sky-500/12 text-sky-600 dark:text-sky-400' },
+}
+
+/** Tag de perfil exibida na turma e ao lado do nome no chat. */
+export function TagPapel({ papel, mudo }: { papel: string; mudo?: boolean }) {
+  const p = PAPEL_ROTULO[papel] ?? PAPEL_ROTULO.aluno
+  if (mudo && papel === 'aluno') return null
+  return (
+    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${p.classe}`}>
+      {p.texto}
+    </span>
+  )
+}
+
 export function Vazio({ icone, titulo, texto }: { icone: ReactNode; titulo: string; texto: string }) {
   return (
     <div className="painel flex flex-col items-center gap-2 px-6 py-14 text-center">
