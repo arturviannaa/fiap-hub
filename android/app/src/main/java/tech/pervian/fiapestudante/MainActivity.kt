@@ -55,8 +55,30 @@ const val CANAL_NOTIF = "novidades"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Segura o splash um instante e anima a saída: o logo FIAP dá um zoom-out
+        // suave e some, revelando o app. Funciona em todas as versões do Android.
+        var splashPronto = false
+        splash.setKeepOnScreenCondition { !splashPronto }
+        window.decorView.postDelayed({ splashPronto = true }, 320)
+        splash.setOnExitAnimationListener { provider ->
+            val icone = provider.iconView
+            val conjunto = android.animation.AnimatorSet()
+            conjunto.playTogether(
+                android.animation.ObjectAnimator.ofFloat(icone, android.view.View.SCALE_X, 1f, 1.6f),
+                android.animation.ObjectAnimator.ofFloat(icone, android.view.View.SCALE_Y, 1f, 1.6f),
+                android.animation.ObjectAnimator.ofFloat(provider.view, android.view.View.ALPHA, 1f, 0f),
+            )
+            conjunto.duration = 420
+            conjunto.interpolator = android.view.animation.DecelerateInterpolator()
+            conjunto.addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(a: android.animation.Animator) = provider.remove()
+            })
+            conjunto.start()
+        }
+
         criarCanalNotificacao()
         val sessao = Sessao(applicationContext)
         val api = Api(sessao)
