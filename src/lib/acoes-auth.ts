@@ -3,7 +3,7 @@
 import { AuthError } from 'next-auth'
 import bcrypt from 'bcryptjs'
 import { sql, um } from './db'
-import { acharOuCriar, dominioPermitido, dominiosTexto, signIn } from './auth'
+import { acharOuCriar, dominioPermitido, dominiosTexto, signIn, signOut } from './auth'
 import { limparTexto, permitido } from './limites'
 
 export type EstadoForm = { erro?: string } | null
@@ -45,4 +45,8 @@ export async function cadastrar(_estado: EstadoForm, dados: FormData): Promise<E
     throw e
   }
   return null
+}
+
+export async function sair() {
+  await signOut({ redirectTo: '/entrar' })
 }
