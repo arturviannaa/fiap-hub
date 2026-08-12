@@ -52,14 +52,14 @@ private fun baixar(ctx: Context, token: String?, id: Int, nome: String) {
 }
 
 @Composable
-fun MateriaisScreen(api: Api, sessao: Sessao) {
+fun MateriaisScreen(api: Api, sessao: Sessao, disc: String) {
     var aba by remember { mutableStateOf("turma") }
     var dados by remember { mutableStateOf<RespMateriais?>(null) }
     var escolhido by remember { mutableStateOf<ArquivoEscolhido?>(null) }
     val ctx = LocalContext.current
     val escopo = rememberCoroutineScope()
 
-    suspend fun recarregar() { dados = runCatching { api.materiais(aba) }.getOrNull() }
+    suspend fun recarregar() { dados = runCatching { api.materiais(aba, disc) }.getOrNull() }
     LaunchedEffect(aba) { recarregar() }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -121,7 +121,7 @@ fun MateriaisScreen(api: Api, sessao: Sessao) {
                 TextButton(enabled = !enviando, onClick = {
                     enviando = true
                     escopo.launch {
-                        val ok = runCatching { api.enviarMaterial(a.nome, a.mime, a.bytes, descricao, publico) }.getOrDefault(false)
+                        val ok = runCatching { api.enviarMaterial(a.nome, a.mime, a.bytes, descricao, publico, disc) }.getOrDefault(false)
                         enviando = false; escolhido = null
                         Toast.makeText(ctx, if (ok) "Material enviado!" else "Falha no envio", Toast.LENGTH_SHORT).show()
                         if (ok) { aba = "meus"; recarregar() }

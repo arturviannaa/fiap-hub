@@ -14,8 +14,8 @@ android {
         applicationId = "tech.pervian.fiapestudante"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.5"
     }
 
     buildFeatures {
