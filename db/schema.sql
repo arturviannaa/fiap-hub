@@ -30,6 +30,11 @@ BEGIN
   END IF;
 END $$;
 
+CREATE TABLE IF NOT EXISTS contadores (
+  chave TEXT PRIMARY KEY,
+  valor BIGINT NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS push_tokens (
   token       TEXT PRIMARY KEY,
   usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
