@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FIAP Estudante · App</title>
+<meta name="theme-color" content="#0c0d11">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/app/icon.png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--mag:#ed145b;--mag2:#fb7099}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:#0c0d11;color:#eceef4;min-height:100dvh;
+    display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.35;z-index:0;pointer-events:none;animation:flutua 14s ease-in-out infinite}
+  .b1{width:420px;height:420px;background:var(--mag);top:-120px;right:-100px}
+  .b2{width:360px;height:360px;background:#7c5cff;bottom:-140px;left:-120px;animation-delay:-7s}
+  @keyframes flutua{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,30px) scale(1.08)}}
+
+  .card{
+    position:relative;z-index:1;width:100%;max-width:440px;
+    background:rgba(20,22,28,.72);backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,.08);border-radius:28px;
+    padding:40px 32px;text-align:center;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.7);
+    animation:sobe .6s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes sobe{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+
+  .icone{
+    width:104px;height:104px;border-radius:26px;margin:0 auto 20px;display:block;
+    box-shadow:0 16px 40px -8px rgba(237,20,91,.55);
+    animation:pulso 3s ease-in-out infinite;
+  }
+  @keyframes pulso{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+  h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+  .sub{color:#969aa8;font-size:14px;margin-top:6px}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+    background:rgba(237,20,91,.14);color:var(--mag2);
+    padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+
+  .baixar{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    margin-top:26px;width:100%;padding:16px;
+    background:linear-gradient(135deg,var(--mag),var(--mag2));color:#fff;
+    border:none;border-radius:16px;font-size:16px;font-weight:700;cursor:pointer;
+    text-decoration:none;transition:transform .15s,box-shadow .15s;
+    box-shadow:0 12px 30px -8px rgba(237,20,91,.6);
+  }
+  .baixar:hover{transform:translateY(-2px);box-shadow:0 18px 40px -8px rgba(237,20,91,.7)}
+  .baixar:active{transform:translateY(0)}
+  .tamanho{font-size:12px;color:#969aa8;margin-top:10px}
+
+  .feats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:26px;text-align:left}
+  .feat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px}
+  .feat b{display:block;font-size:13px}
+  .feat span{font-size:11px;color:#969aa8}
+
+  .novidades{margin-top:22px;text-align:left;background:rgba(255,255,255,.03);border-radius:14px;padding:16px}
+  .novidades h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#969aa8;margin-bottom:8px}
+  .novidades li{list-style:none;font-size:13px;padding:3px 0;padding-left:18px;position:relative}
+  .novidades li::before{content:'';position:absolute;left:2px;top:9px;width:6px;height:6px;border-radius:50%;background:var(--mag)}
+
+  .passos{margin-top:22px;text-align:left}
+  .passos summary{cursor:pointer;color:#969aa8;font-size:13px;font-weight:600;user-select:none}
+  .passos ol{margin:12px 0 0 18px;font-size:13px;color:#c3c6d0;line-height:1.9}
+
+  .rodape{margin-top:24px;font-size:11px;color:#5b5f6b}
+  .rodape a{color:var(--mag2);text-decoration:none}
+  @media(max-width:400px){.card{padding:32px 22px}.feats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<main class="card">
+  <img class="icone" src="/app/icon.png" alt="FIAP Estudante">
+  <h1>FIAP Estudante</h1>
+  <p class="sub">A plataforma de estudos da turma, no seu bolso.</p>
+  <div class="pill"><span class="dot"></span> <span id="versao">versão —</span></div>
+
+  <a class="baixar" id="btn" href="/app/FIAP-Estudante.apk" download>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Baixar para Android
+  </a>
+  <p class="tamanho" id="tamanho">APK · Android 7.0+</p>
+
+  <div class="feats">
+    <div class="feat"><b>📚 Aulas</b><span>Todo o material, sincronizado</span></div>
+    <div class="feat"><b>💬 Chat ao vivo</b><span>Turma e grupos em tempo real</span></div>
+    <div class="feat"><b>🔔 Auto-update</b><span>Avisa quando há versão nova</span></div>
+    <div class="feat"><b>🎨 Temas</b><span>Claro, escuro ou do sistema</span></div>
+  </div>
+
+  <div class="novidades" id="box-novidades" hidden>
+    <h3>Novidades desta versão</h3>
+    <ul id="novidades"></ul>
+  </div>
+
+  <details class="passos">
+    <summary>Como instalar</summary>
+    <ol>
+      <li>Toque em <b>Baixar para Android</b>.</li>
+      <li>Abra o arquivo baixado.</li>
+      <li>Se pedir, permita <b>instalar de fontes desconhecidas</b> para o navegador.</li>
+      <li>Confirme a instalação e entre com a conta do site.</li>
+    </ol>
+  </details>
+
+  <p class="rodape">Plataforma interna da turma · <a href="https://fiap.pervian.tech">abrir no navegador</a></p>
+</main>
+
+<script>
+  fetch('/app/version.json',{cache:'no-store'}).then(r=>r.json()).then(v=>{
+    document.getElementById('versao').textContent = 'versão ' + (v.versionName||'') + ' · disponível';
+    if(Array.isArray(v.novidades) && v.novidades.length){
+      document.getElementById('box-novidades').hidden = false;
+      document.getElementById('novidades').innerHTML = v.novidades.map(n=>'<li>'+n.replace(/[<>&]/g,'')+'</li>').join('');
+    }
+  }).catch(()=>{});
+  // tamanho real da APK
+  fetch('/app/FIAP-Estudante.apk',{method:'HEAD'}).then(r=>{
+    const b=+r.headers.get('content-length'); if(b) document.getElementById('tamanho').textContent = (b/1048576).toFixed(1)+' MB · Android 7.0+';
+  }).catch(()=>{});
+  // se não for Android, ajusta o texto do botão
+  if(!/Android/i.test(navigator.userAgent)){
+    document.getElementById('tamanho').textContent += ' · abra este link no celular';
+  }
+</script>
+</body>
+</html>
