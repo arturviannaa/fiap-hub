@@ -53,7 +53,7 @@ export default async function Painel() {
         <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{u.nome.split(' ')[0]} 👋</h1>
         <p className="mt-2 max-w-lg text-sm suave">
           {dados.disciplina.nome} — {dados.disciplina.totalAulas} aulas organizadas por assunto, direto do
-          material da prof. {dados.disciplina.professora}.
+          material da prof. {dados.disciplina.professor}.
         </p>
 
         <div className="mt-6 max-w-md">

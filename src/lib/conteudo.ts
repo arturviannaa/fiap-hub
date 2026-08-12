@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from 'node:fs'
+import { readFileSync, statSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 export type Saida =
@@ -25,47 +25,87 @@ export type Aula = {
   exemplos: number
 }
 
-export type Modulo = {
+export type Modulo = { slug: string; titulo: string; resumo: string; icone: string; aulas: Aula[] }
+
+export type DisciplinaMeta = {
   slug: string
-  titulo: string
-  resumo: string
+  nome: string
+  curto: string
+  professor: string
   icone: string
-  aulas: Aula[]
+  cor: string
+  fonte: string
+  totalAulas: number
 }
 
-export type Conteudo = {
-  geradoEm: string
-  disciplina: { slug: string; nome: string; professora: string; fonte: string; totalAulas: number }
-  modulos: Modulo[]
-}
+export type Conteudo = { geradoEm: string; disciplina: DisciplinaMeta; modulos: Modulo[] }
 
 const DIR = process.env.CONTENT_DIR || join(process.cwd(), 'content')
+export const DISCIPLINA_PADRAO = 'python'
 
-// O servico de sync reescreve o JSON enquanto o app roda: cache invalidado por
-// mtime, entao aula nova aparece sem reiniciar container.
-const g = globalThis as typeof globalThis & { _conteudo?: { mtime: number; dados: Conteudo } }
+const g = globalThis as typeof globalThis & {
+  _conteudo?: Record<string, { mtime: number; dados: Conteudo }>
+  _disc?: { mtime: number; lista: Omit<DisciplinaMeta, 'fonte'>[] }
+}
 
-export function conteudo(): Conteudo {
-  const arquivo = join(DIR, 'python.json')
+// Lista de disciplinas (índice gerado pelo build). Cacheada por mtime.
+export function disciplinas(): Omit<DisciplinaMeta, 'fonte'>[] {
+  const arquivo = join(DIR, 'disciplinas.json')
+  if (!existsSync(arquivo)) return []
   const mtime = statSync(arquivo).mtimeMs
-  if (!g._conteudo || g._conteudo.mtime !== mtime) {
-    g._conteudo = { mtime, dados: JSON.parse(readFileSync(arquivo, 'utf8')) }
+  if (!g._disc || g._disc.mtime !== mtime) {
+    g._disc = { mtime, lista: JSON.parse(readFileSync(arquivo, 'utf8')).disciplinas }
   }
-  return g._conteudo.dados
+  return g._disc.lista
 }
 
-export function todasAulas(): Aula[] {
-  return conteudo().modulos.flatMap((m) => m.aulas)
+export function ehDisciplina(slug: string): boolean {
+  return slug === DISCIPLINA_PADRAO || disciplinas().some((d) => d.slug === slug)
 }
 
-export function acharAula(slug: string): Aula | undefined {
-  return todasAulas().find((a) => a.slug === slug)
+// Conteúdo de uma disciplina (default: python). Cache invalidado por mtime, então
+// o sync pode reescrever o JSON com o app rodando.
+export function conteudo(disc: string = DISCIPLINA_PADRAO): Conteudo {
+  const arquivo = join(DIR, `${disc}.json`)
+  const mtime = statSync(arquivo).mtimeMs
+  g._conteudo ??= {}
+  if (!g._conteudo[disc] || g._conteudo[disc].mtime !== mtime) {
+    g._conteudo[disc] = { mtime, dados: JSON.parse(readFileSync(arquivo, 'utf8')) }
+  }
+  return g._conteudo[disc].dados
 }
 
-export function vizinhas(slug: string) {
-  const lista = todasAulas()
+export function todasAulas(disc: string = DISCIPLINA_PADRAO): Aula[] {
+  return conteudo(disc).modulos.flatMap((m) => m.aulas)
+}
+
+// Acha a aula pela slug. Se a disciplina não for dada, procura em todas — as
+// slugs não colidem entre disciplinas (curadas no Python, por pasta no Edge).
+export function acharAula(slug: string, disc?: string): Aula | undefined {
+  if (disc) return todasAulas(disc).find((a) => a.slug === slug)
+  for (const d of listaSlugs()) {
+    const a = todasAulas(d).find((x) => x.slug === slug)
+    if (a) return a
+  }
+  return undefined
+}
+
+// Disciplina a que uma aula pertence.
+export function disciplinaDaAula(slug: string): string | undefined {
+  for (const d of listaSlugs()) if (todasAulas(d).some((a) => a.slug === slug)) return d
+  return undefined
+}
+
+export function vizinhas(slug: string, disc?: string) {
+  const d = disc || disciplinaDaAula(slug) || DISCIPLINA_PADRAO
+  const lista = todasAulas(d)
   const i = lista.findIndex((a) => a.slug === slug)
   return { anterior: i > 0 ? lista[i - 1] : null, proxima: i >= 0 && i < lista.length - 1 ? lista[i + 1] : null }
+}
+
+function listaSlugs(): string[] {
+  const ds = disciplinas().map((d) => d.slug)
+  return ds.length ? ds : [DISCIPLINA_PADRAO]
 }
 
 const DIAS_NOVO = 14

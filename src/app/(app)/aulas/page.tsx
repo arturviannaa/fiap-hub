@@ -20,7 +20,7 @@ export default async function Aulas() {
     <div className="mx-auto max-w-5xl">
       <Cabecalho
         titulo={dados.disciplina.nome}
-        descricao={`${dados.disciplina.totalAulas} aulas · material da prof. ${dados.disciplina.professora}, sincronizado do repositório oficial da disciplina.`}
+        descricao={`${dados.disciplina.totalAulas} aulas · material da prof. ${dados.disciplina.professor}, sincronizado do repositório oficial da disciplina.`}
       />
 
       <div className="space-y-8">
