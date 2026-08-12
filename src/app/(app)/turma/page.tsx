@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Trophy } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
@@ -47,15 +48,16 @@ export default async function Turma() {
       <ul className="grid gap-3 sm:grid-cols-2">
         {membros.map((m, i) => {
           const pct = total ? Math.round((Number(m.aulas) / total) * 100) : 0
+          const online = Date.now() - new Date(m.visto_em).getTime() < 90_000
           return (
             <li key={m.id} className="painel flex gap-3 p-4">
               <Avatar nome={m.nome} tamanho={44} usuarioId={m.id} foto={m.foto} />
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
-                  <span className="truncate font-medium">
+                  <Link href={`/u/${m.id}`} className="truncate font-medium hover:text-fiap-500">
                     {m.nome}
                     {m.id === u.id && <span className="suave"> (você)</span>}
-                  </span>
+                  </Link>
                   {i === 0 && Number(m.aulas) > 0 && (
                     <Selo tom="fiap">
                       <Trophy size={10} /> mais adiantado
@@ -70,8 +72,8 @@ export default async function Turma() {
                   <div className="h-full rounded-full bg-fiap-500" style={{ width: `${pct}%` }} />
                 </div>
                 <p className="mt-1.5 text-[11px] suave">
-                  {m.aulas}/{total} aulas · {m.notas} anotações · {m.arquivos} materiais · ativo{' '}
-                  {quando(m.visto_em)} atrás
+                  {m.aulas}/{total} aulas · {m.notas} anotações · {m.arquivos} materiais ·{' '}
+                  {online ? 'ativo agora' : `ativo ${quando(m.visto_em)} atrás`}
                 </p>
 
                 {u.papeis.includes('admin') && (

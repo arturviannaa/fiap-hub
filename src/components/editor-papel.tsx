@@ -4,9 +4,9 @@ import { useState, useTransition } from 'react'
 import { Check, Loader2, Pencil } from 'lucide-react'
 import { alternarPapel, renomearUsuario } from '@/lib/acoes'
 
-// Tags que o admin pode ligar/desligar. 'aluno' é base de todos e não aparece
-// aqui (ninguém deixa de ser aluno).
+// Tags que o admin pode ligar/desligar. 'aluno' também sai (professor não é aluno).
 const TAGS: { valor: string; rotulo: string }[] = [
+  { valor: 'aluno', rotulo: 'aluno' },
   { valor: 'professor', rotulo: 'professor' },
   { valor: 'admin', rotulo: 'admin' },
 ]

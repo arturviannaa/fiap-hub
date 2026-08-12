@@ -265,14 +265,15 @@ export async function removerDoGrupo(grupoId: number, usuarioId: number) {
 export async function alternarPapel(usuarioId: number, papel: string) {
   const u = await usuarioAtual()
   if (!u.papeis.includes('admin')) return
-  if (papel === 'aluno' || !PAPEIS.includes(papel as Papel)) return
+  if (!PAPEIS.includes(papel as Papel)) return
+  // Única trava: o admin não remove o próprio admin (evita se trancar pra fora).
+  // 'aluno' É removível — professor não é aluno.
   if (usuarioId === u.id && papel === 'admin') return
-  // array_remove + array de add, sem duplicar; mantém 'aluno' sempre presente.
   await sql(
     `UPDATE usuarios SET papeis = (
        SELECT ARRAY(SELECT DISTINCT e FROM unnest(
          CASE WHEN $1 = ANY(papeis) THEN array_remove(papeis, $1)
-              ELSE papeis || $1 END || ARRAY['aluno']) AS e))
+              ELSE papeis || $1 END) AS e))
      WHERE id = $2`,
     [papel, usuarioId],
   )
