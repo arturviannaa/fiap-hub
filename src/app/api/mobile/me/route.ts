@@ -1,5 +1,5 @@
 import { sql } from '@/lib/db'
-import { todasAulas } from '@/lib/conteudo'
+import { todasAulas , totalAulasGlobais } from '@/lib/conteudo'
 import { naoAutorizado, usuarioDoToken } from '@/lib/mobile-auth'
 
 // Perfil do usuário logado + estatísticas (igual à tela de perfil do site).
@@ -13,5 +13,5 @@ export async function GET(req: Request) {
             (SELECT count(*) FROM mensagens WHERE usuario_id=$1)::text AS mensagens`,
     [u.id],
   )
-  return Response.json({ usuario: u, total: todasAulas().length, stats: s })
+  return Response.json({ usuario: u, total: totalAulasGlobais(), stats: s })
 }

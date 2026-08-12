@@ -108,6 +108,13 @@ function listaSlugs(): string[] {
   return ds.length ? ds : [DISCIPLINA_PADRAO]
 }
 
+// Total de aulas somando TODAS as disciplinas — para telas globais (perfil, turma).
+export function totalAulasGlobais(): number {
+  const ds = disciplinas()
+  if (ds.length) return ds.reduce((n, d) => n + d.totalAulas, 0)
+  return todasAulas().length
+}
+
 const DIAS_NOVO = 14
 export function ehNova(aula: Aula) {
   if (!aula.atualizadoEm) return false

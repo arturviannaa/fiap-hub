@@ -1,7 +1,7 @@
 import { BookOpen, Files, LogOut, MessageSquare, NotebookPen } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { um } from '@/lib/db'
-import { todasAulas } from '@/lib/conteudo'
+import { todasAulas, totalAulasGlobais } from '@/lib/conteudo'
 import { salvarPerfil } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
 import { FotoPerfil } from '@/components/foto-perfil'
@@ -13,7 +13,7 @@ export const metadata = { title: 'Perfil' }
 
 export default async function Perfil() {
   const u = await usuarioAtual()
-  const total = todasAulas().length
+  const total = totalAulasGlobais()
   const s = await um<{ aulas: string; notas: string; arquivos: string; mensagens: string }>(
     `SELECT (SELECT count(*) FROM progresso WHERE usuario_id=$1)::text AS aulas,
             (SELECT count(*) FROM notas WHERE usuario_id=$1)::text AS notas,
