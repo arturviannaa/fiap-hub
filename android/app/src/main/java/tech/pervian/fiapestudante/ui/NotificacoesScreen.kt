@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
+import kotlinx.coroutines.launch
 import tech.pervian.fiapestudante.data.Api
 import tech.pervian.fiapestudante.data.Notificacao
 import tech.pervian.fiapestudante.data.Sessao
@@ -35,6 +37,7 @@ fun NotificacoesScreen(
     onLidas: () -> Unit,
 ) {
     var itens by remember { mutableStateOf<List<Notificacao>?>(null) }
+    val escopo = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         itens = runCatching { api.notificacoes().notificacoes }.getOrNull() ?: emptyList()
@@ -46,6 +49,19 @@ fun NotificacoesScreen(
         TopAppBar(
             title = { Text("Notificações") },
             navigationIcon = { IconButton(onClick = onVoltar) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") } },
+            actions = {
+                if (!itens.isNullOrEmpty()) {
+                    TextButton(onClick = {
+                        escopo.launch { runCatching { api.limparNotificacoes() } }
+                        itens = emptyList()
+                        onLidas()
+                    }) {
+                        Icon(Icons.Filled.ClearAll, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Limpar")
+                    }
+                }
+            },
         )
         val lista = itens ?: run { Carregando(); return }
         if (lista.isEmpty()) {

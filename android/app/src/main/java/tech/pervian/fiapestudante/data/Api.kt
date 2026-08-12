@@ -136,6 +136,10 @@ class Api(private val sessao: Sessao) {
         runCatching { cliente.newCall(req("/api/mobile/notificacoes/visto").post("".toRequestBody()).build()).execute().close() }
     }
 
+    suspend fun limparNotificacoes(): Unit = withContext(Dispatchers.IO) {
+        runCatching { cliente.newCall(req("/api/mobile/notificacoes/limpar").post("".toRequestBody()).build()).execute().close() }
+    }
+
     suspend fun heartbeat(): Unit = withContext(Dispatchers.IO) {
         runCatching {
             cliente.newCall(req("/api/mobile/presenca").post("".toRequestBody()).build()).execute().close()
