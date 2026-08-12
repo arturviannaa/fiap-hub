@@ -5,6 +5,7 @@ import { sql } from '@/lib/db'
 import { todasAulas } from '@/lib/conteudo'
 import { Cabecalho } from '@/components/cabecalho'
 import { EditorPapel } from '@/components/editor-papel'
+import { PresencaProvider, StatusPresenca } from '@/components/presenca-live'
 import { Avatar, Selo, TagsPapel, quando } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
@@ -45,10 +46,10 @@ export default async function Turma() {
         }
       />
 
+      <PresencaProvider>
       <ul className="grid gap-3 sm:grid-cols-2">
         {membros.map((m, i) => {
           const pct = total ? Math.round((Number(m.aulas) / total) * 100) : 0
-          const online = Date.now() - new Date(m.visto_em).getTime() < 90_000
           return (
             <li key={m.id} className="painel flex gap-3 p-4">
               <Avatar nome={m.nome} tamanho={44} usuarioId={m.id} foto={m.foto} />
@@ -73,7 +74,7 @@ export default async function Turma() {
                 </div>
                 <p className="mt-1.5 text-[11px] suave">
                   {m.aulas}/{total} aulas · {m.notas} anotações · {m.arquivos} materiais ·{' '}
-                  {online ? 'ativo agora' : `ativo ${quando(m.visto_em)} atrás`}
+                  <StatusPresenca usuarioId={m.id} vistoEm={m.visto_em} eu={m.id === u.id} />
                 </p>
 
                 {u.papeis.includes('admin') && (
@@ -84,6 +85,7 @@ export default async function Turma() {
           )
         })}
       </ul>
+      </PresencaProvider>
     </div>
   )
 }
