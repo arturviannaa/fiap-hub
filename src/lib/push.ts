@@ -1,21 +1,20 @@
 import { readFileSync, existsSync } from 'node:fs'
+// API modular do firebase-admin, com import estático (não require dinâmico) para
+// o Next incluir no build standalone. serverExternalPackages evita o bundling.
+import { cert, getApps, initializeApp } from 'firebase-admin/app'
+import { getMessaging, type Messaging } from 'firebase-admin/messaging'
 import { sql } from './db'
 
 // Envio de push via FCM. A credencial (service account) fica num arquivo fora
-// do git, apontado por FIREBASE_CRED_PATH. Sem o arquivo, o push vira no-op —
-// o resto do app funciona igual.
-const g = globalThis as typeof globalThis & { _fcm?: any }
+// do git, apontado por FIREBASE_CRED_PATH. Sem o arquivo, o push vira no-op.
+const g = globalThis as typeof globalThis & { _fcm?: Messaging }
 
-function messaging() {
+function messaging(): Messaging | null {
   const caminho = process.env.FIREBASE_CRED_PATH
   if (!caminho || !existsSync(caminho)) return null
   if (!g._fcm) {
-    // require tardio: só carrega o firebase-admin se for realmente usar push.
-    const admin = require('firebase-admin')
-    if (!admin.apps.length) {
-      admin.initializeApp({ credential: admin.credential.cert(JSON.parse(readFileSync(caminho, 'utf8'))) })
-    }
-    g._fcm = admin.messaging()
+    if (!getApps().length) initializeApp({ credential: cert(JSON.parse(readFileSync(caminho, 'utf8'))) })
+    g._fcm = getMessaging()
   }
   return g._fcm
 }
