@@ -4,7 +4,8 @@ import { ArrowLeft, BookOpen, Files, MessageSquare, NotebookPen, Pencil } from '
 import { usuarioAtual } from '@/lib/auth'
 import { um } from '@/lib/db'
 import { todasAulas } from '@/lib/conteudo'
-import { Avatar, BotaoLink, TagsPapel, quando } from '@/components/ui'
+import { Avatar, BotaoLink, TagsPapel } from '@/components/ui'
+import { PresencaProvider, StatusPresenca } from '@/components/presenca-live'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +44,6 @@ export default async function PerfilPublico({ params }: { params: Promise<{ id: 
 
   const total = todasAulas().length
   const ehVoce = p.id === eu.id
-  const online = Date.now() - new Date(p.visto_em).getTime() < 90_000
 
   const stats = [
     { Icone: BookOpen, valor: `${p.aulas}/${total}`, rotulo: 'aulas concluídas' },
@@ -57,6 +57,7 @@ export default async function PerfilPublico({ params }: { params: Promise<{ id: 
         <ArrowLeft size={15} /> Turma
       </Link>
 
+      <PresencaProvider>
       <div className="painel p-6">
         <div className="flex flex-wrap items-center gap-4">
           <Avatar nome={p.nome} tamanho={80} usuarioId={p.id} foto={p.foto} />
@@ -66,11 +67,8 @@ export default async function PerfilPublico({ params }: { params: Promise<{ id: 
               <TagsPapel papeis={p.papeis} />
             </div>
             <p className="truncate text-sm suave">{p.email}</p>
-            <p className="mt-1 flex items-center gap-1.5 text-xs suave">
-              <span
-                className={`inline-block h-2 w-2 rounded-full ${online ? 'bg-emerald-500' : 'bg-[var(--borda)]'}`}
-              />
-              {online ? 'ativo agora' : `ativo ${quando(p.visto_em)} atrás`}
+            <p className="mt-1 text-xs suave">
+              <StatusPresenca usuarioId={p.id} vistoEm={p.visto_em} eu={ehVoce} />
             </p>
           </div>
           {ehVoce && (
@@ -105,6 +103,7 @@ export default async function PerfilPublico({ params }: { params: Promise<{ id: 
           </BotaoLink>
         </div>
       )}
+      </PresencaProvider>
     </div>
   )
 }
