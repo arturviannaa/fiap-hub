@@ -36,21 +36,6 @@ Sem ORM: são cinco tabelas, o SQL fica em `db/schema.sql` e roda sozinho a cada
 
 Quem cria a primeira conta vira `admin` (pode apagar anotação e material de qualquer pessoa).
 
-### Login com Microsoft / Outlook
-
-O botão aparece na tela de login, mas só funciona depois de registrar um app no Entra ID:
-
-1. https://entra.microsoft.com → **Registros de aplicativo** → **Novo registro**
-2. Contas suportadas: **contas em qualquer diretório organizacional (multilocatário)**
-3. URI de redirecionamento (Web): `https://fiap.pervian.tech/api/auth/callback/microsoft-entra-id`
-4. Em **Certificados e segredos**, gere um *client secret*
-5. No `.env` da VPS preencha `AUTH_MICROSOFT_ENTRA_ID_ID` e `AUTH_MICROSOFT_ENTRA_ID_SECRET`,
-   depois `docker compose up -d app`
-
-O filtro de domínio continua valendo: conta que não for da FIAP é recusada mesmo entrando pela Microsoft.
-Se a TI da FIAP bloquear consentimento a apps de terceiros, o aluno verá um pedido de aprovação do
-administrador — nesse caso o login por senha segue funcionando.
-
 ## Desenvolvimento
 
 ```bash
