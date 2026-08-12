@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react'
 import { Avatar } from './ui'
+import { Presenca } from './presenca'
 
 const LINKS = [
   { href: '/', rotulo: 'Painel', Icone: LayoutDashboard },
@@ -110,6 +111,7 @@ export function Shell({
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr]">
+      <Presenca />
       <aside className="sticky top-0 hidden h-dvh border-r bg-[var(--painel)] lg:block">{lateral}</aside>
 
       {/* Drawer no mobile */}

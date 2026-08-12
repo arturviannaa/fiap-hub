@@ -302,9 +302,12 @@ export function Chat({
                   <div className="min-w-0 flex-1">
                     {!agrupa && (
                       <p className="flex items-baseline gap-2">
-                        <span className="text-sm font-semibold">
+                        <Link
+                          href={`/u/${m.usuario_id}`}
+                          className="text-sm font-semibold hover:text-fiap-500"
+                        >
                           {m.usuario_id === usuario.id ? 'Você' : m.nome}
-                        </span>
+                        </Link>
                         <TagsPapel papeis={m.papeis} mudo />
                         <span className="text-[11px] suave" suppressHydrationWarning>
                           {hora(m.criado_em)}
