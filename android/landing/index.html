@@ -59,6 +59,12 @@
   .baixar:active{transform:translateY(0)}
   .tamanho{font-size:12px;color:#969aa8;margin-top:10px}
 
+  .stats{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:22px}
+  .stat{text-align:center}
+  .stat b{display:block;font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--mag),var(--mag2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
+  .stat span{font-size:11px;color:#969aa8;text-transform:uppercase;letter-spacing:.05em}
+  .divisor{width:1px;height:34px;background:rgba(255,255,255,.1)}
+
   .feats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:26px;text-align:left}
   .feat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px}
   .feat b{display:block;font-size:13px}
@@ -88,11 +94,17 @@
   <p class="sub">A plataforma de estudos da turma, no seu bolso.</p>
   <div class="pill"><span class="dot"></span> <span id="versao">versão —</span></div>
 
-  <a class="baixar" id="btn" href="/app/FIAP-Estudante.apk" download>
+  <a class="baixar" id="btn" href="/api/app/baixar">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     Baixar para Android
   </a>
   <p class="tamanho" id="tamanho">APK · Android 7.0+</p>
+
+  <div class="stats">
+    <div class="stat"><b id="n-alunos">—</b><span>alunos</span></div>
+    <div class="divisor"></div>
+    <div class="stat"><b id="n-downloads">—</b><span>downloads</span></div>
+  </div>
 
   <div class="feats">
     <div class="feat"><b>📚 Aulas</b><span>Todo o material, sincronizado</span></div>
@@ -135,6 +147,22 @@
   if(!/Android/i.test(navigator.userAgent)){
     document.getElementById('tamanho').textContent += ' · abra este link no celular';
   }
+  // contador público (alunos + downloads) com animação de contagem
+  function contar(el, alvo){
+    const ini=performance.now(), dur=900;
+    function passo(t){
+      const p=Math.min(1,(t-ini)/dur), v=Math.floor((1-Math.pow(1-p,3))*alvo);
+      el.textContent = v.toLocaleString('pt-BR'); if(p<1) requestAnimationFrame(passo);
+    }
+    requestAnimationFrame(passo);
+  }
+  fetch('/api/app/stats',{cache:'no-store'}).then(r=>r.json()).then(s=>{
+    contar(document.getElementById('n-alunos'), s.usuarios||0);
+    contar(document.getElementById('n-downloads'), s.downloads||0);
+  }).catch(()=>{
+    document.getElementById('n-alunos').textContent='0';
+    document.getElementById('n-downloads').textContent='0';
+  });
 </script>
 </body>
 </html>
