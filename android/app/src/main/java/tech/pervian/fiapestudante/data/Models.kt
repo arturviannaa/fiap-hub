@@ -211,7 +211,7 @@ data class NotaApp(
 data class RespNotas(val notas: List<NotaApp> = emptyList(), val euId: Int = 0)
 
 @Serializable
-data class NovaNota(val corpo: String, val titulo: String = "", val publica: Boolean = false)
+data class NovaNota(val corpo: String, val titulo: String = "", val publica: Boolean = false, val disciplina: String = "python")
 
 @Serializable
 data class MaterialApp(
@@ -229,3 +229,17 @@ data class MaterialApp(
 
 @Serializable
 data class RespMateriais(val materiais: List<MaterialApp> = emptyList(), val euId: Int = 0)
+
+@Serializable
+data class DisciplinaApp(
+    val slug: String,
+    val nome: String,
+    val curto: String = "",
+    val professor: String = "",
+    val icone: String = "",
+    val cor: String = "#ED145B",
+    val totalAulas: Int = 0,
+)
+
+@Serializable
+data class RespDisciplinas(val disciplinas: List<DisciplinaApp> = emptyList())
