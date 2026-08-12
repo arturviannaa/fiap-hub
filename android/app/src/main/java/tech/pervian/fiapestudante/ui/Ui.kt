@@ -79,3 +79,11 @@ fun Tags(papeis: List<String>, mudo: Boolean = false) {
 }
 
 fun corDoModulo() = FiapMagenta
+
+// Clique sem o efeito ripple (usado no título/switcher da top bar).
+fun androidx.compose.ui.Modifier.clickableSemRipple(onClick: () -> Unit): androidx.compose.ui.Modifier =
+    this.then(androidx.compose.foundation.clickable(
+        interactionSource = androidx.compose.foundation.interaction.MutableInteractionSource(),
+        indication = null,
+        onClick = onClick,
+    ))

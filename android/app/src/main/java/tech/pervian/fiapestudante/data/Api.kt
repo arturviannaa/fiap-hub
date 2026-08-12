@@ -41,6 +41,17 @@ class Sessao(context: Context) {
         get() = prefs.getString("tema", null)
         set(v) = prefs.edit().putString("tema", v).apply()
 
+    // Disciplina ativa (null = ainda não escolheu → mostra seletor).
+    var disciplina: String?
+        get() = prefs.getString("disciplina", null)
+        set(v) = prefs.edit().putString("disciplina", v).apply()
+
+    var disciplinaCurto: String?
+        get() = prefs.getString("disciplinaCurto", null)
+        set(v) = prefs.edit().putString("disciplinaCurto", v).apply()
+
+    val disc: String get() = disciplina ?: "python"
+
     val usuario: Usuario? get() = usuarioJson?.let { runCatching { JSON.decodeFromString<Usuario>(it) }.getOrNull() }
     val logado: Boolean get() = token != null
 
@@ -87,14 +98,15 @@ class Api(private val sessao: Sessao) {
     suspend fun login(email: String, senha: String): RespLogin =
         post("/api/mobile/login", JSON.encodeToString(mapOf("email" to email, "senha" to senha)))
 
-    suspend fun aulas(): RespAulas = get("/api/mobile/aulas")
+    suspend fun disciplinas(): RespDisciplinas = get("/api/mobile/disciplinas")
+    suspend fun aulas(disc: String): RespAulas = get("/api/mobile/aulas?disciplina=$disc")
     suspend fun aula(slug: String): AulaDetalhe = get("/api/mobile/aula/$slug")
     suspend fun marcarAula(slug: String, concluir: Boolean): Unit = withContext(Dispatchers.IO) {
         val body = JSON.encodeToString(mapOf("concluir" to concluir)).toRequestBody(JSON_MEDIA)
         cliente.newCall(req("/api/mobile/aula/$slug").post(body).build()).execute().close()
     }
 
-    suspend fun chat(canal: String): RespChat = get("/api/mobile/chat?canal=$canal")
+    suspend fun chat(canal: String, disc: String): RespChat = get("/api/mobile/chat?canal=$canal&disciplina=$disc")
     suspend fun enviar(canal: String, corpo: String): Unit = withContext(Dispatchers.IO) {
         val body = JSON.encodeToString(mapOf("canal" to canal, "corpo" to corpo)).toRequestBody(JSON_MEDIA)
         cliente.newCall(req("/api/mobile/chat").post(body).build()).execute().use { r ->
@@ -143,23 +155,24 @@ class Api(private val sessao: Sessao) {
         runCatching { cliente.newCall(req("/api/mobile/notificacoes/limpar").post("".toRequestBody()).build()).execute().close() }
     }
 
-    suspend fun notas(aba: String): RespNotas = get("/api/mobile/notas?aba=$aba")
-    suspend fun criarNota(corpo: String, titulo: String, publica: Boolean): Unit = withContext(Dispatchers.IO) {
-        val body = JSON.encodeToString(NovaNota(corpo, titulo, publica)).toRequestBody(JSON_MEDIA)
+    suspend fun notas(aba: String, disc: String): RespNotas = get("/api/mobile/notas?aba=$aba&disciplina=$disc")
+    suspend fun criarNota(corpo: String, titulo: String, publica: Boolean, disc: String): Unit = withContext(Dispatchers.IO) {
+        val body = JSON.encodeToString(NovaNota(corpo, titulo, publica, disc)).toRequestBody(JSON_MEDIA)
         cliente.newCall(req("/api/mobile/notas").post(body).build()).execute().close()
     }
     suspend fun apagarNota(id: Int): Unit = withContext(Dispatchers.IO) {
         val body = JSON.encodeToString(mapOf("id" to id)).toRequestBody(JSON_MEDIA)
         cliente.newCall(req("/api/mobile/notas/apagar").post(body).build()).execute().close()
     }
-    suspend fun materiais(aba: String): RespMateriais = get("/api/mobile/materiais?aba=$aba")
+    suspend fun materiais(aba: String, disc: String): RespMateriais = get("/api/mobile/materiais?aba=$aba&disciplina=$disc")
 
-    suspend fun enviarMaterial(nome: String, mime: String, bytes: ByteArray, descricao: String, publico: Boolean): Boolean =
+    suspend fun enviarMaterial(nome: String, mime: String, bytes: ByteArray, descricao: String, publico: Boolean, disc: String): Boolean =
         withContext(Dispatchers.IO) {
             val body = MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("arquivo", nome, bytes.toRequestBody(mime.toMediaTypeOrNull()))
                 .addFormDataPart("descricao", descricao)
                 .addFormDataPart("publico", if (publico) "publico" else "privado")
+                .addFormDataPart("disciplina", disc)
                 .build()
             cliente.newCall(req("/api/mobile/materiais").post(body).build()).execute().use { it.isSuccessful }
         }

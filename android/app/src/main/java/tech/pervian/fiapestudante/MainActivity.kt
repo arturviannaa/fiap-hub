@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -81,14 +82,19 @@ class MainActivity : ComponentActivity() {
                         DialogTema { escolhido -> sessao.tema = escolhido; tema = escolhido }
                     }
                     var logado by remember { mutableStateOf(sessao.logado) }
-                    if (!logado) {
-                        LoginScreen(api, sessao) { logado = true }
-                    } else {
-                        AppPrincipal(
+                    var disciplina by remember { mutableStateOf(sessao.disciplina) }
+                    when {
+                        !logado -> LoginScreen(api, sessao) { logado = true; disciplina = sessao.disciplina }
+                        disciplina == null -> DisciplinaScreen(api, sessao) { d ->
+                            sessao.disciplina = d.slug; sessao.disciplinaCurto = d.curto; disciplina = d.slug
+                        }
+                        else -> AppPrincipal(
                             api = api, sessao = sessao,
+                            disc = disciplina!!,
                             tema = tema ?: "sistema",
                             onTema = { sessao.tema = it; tema = it },
-                            aoSair = { sessao.limpar(); logado = false },
+                            onTrocarDisciplina = { sessao.disciplina = null; disciplina = null },
+                            aoSair = { sessao.limpar(); logado = false; disciplina = null },
                         )
                     }
                 }
@@ -108,7 +114,7 @@ private data class Aba(val rota: String, val rotulo: String, val icone: ImageVec
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppPrincipal(api: Api, sessao: Sessao, tema: String, onTema: (String) -> Unit, aoSair: () -> Unit) {
+fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (String) -> Unit, onTrocarDisciplina: () -> Unit, aoSair: () -> Unit) {
     val nav = rememberNavController()
     val ctx = LocalContext.current
     val abas = listOf(
@@ -158,7 +164,14 @@ fun AppPrincipal(api: Api, sessao: Sessao, tema: String, onTema: (String) -> Uni
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("FIAP Estudante", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                title = {
+                    androidx.compose.foundation.layout.Column(
+                        modifier = Modifier.clickableSemRipple { onTrocarDisciplina() }
+                    ) {
+                        Text(sessao.disciplinaCurto ?: "FIAP Estudante", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = 16.sp)
+                        Text("trocar disciplina", fontSize = 10.sp, color = FiapMagenta)
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { nav.navigate("perfil") }) {
                         Avatar(eu?.nome ?: "", eu?.id ?: 0, eu?.foto, sessao.token, 30)
@@ -194,16 +207,16 @@ fun AppPrincipal(api: Api, sessao: Sessao, tema: String, onTema: (String) -> Uni
         },
     ) { pad ->
         NavHost(nav, startDestination = "aulas", modifier = Modifier.padding(pad)) {
-            composable("aulas") { AulasScreen(api, sessao, onAbrirAula = { nav.navigate("aula/$it") }) }
+            composable("aulas") { AulasScreen(api, sessao, disc, onAbrirAula = { nav.navigate("aula/$it") }) }
             composable("aula/{slug}") {
                 AulaScreen(api, sessao, it.arguments?.getString("slug") ?: "", onVoltar = { nav.popBackStack() }, onAula = { s -> nav.navigate("aula/$s") })
             }
-            composable("anotacoes") { AnotacoesScreen(api, sessao) }
-            composable("materiais") { MateriaisScreen(api, sessao) }
-            composable("chat") { ChatScreen(api, sessao, onAbrirPerfil = { nav.navigate("u/$it") }) }
+            composable("anotacoes") { AnotacoesScreen(api, sessao, disc) }
+            composable("materiais") { MateriaisScreen(api, sessao, disc) }
+            composable("chat") { ChatScreen(api, sessao, disc = disc, canalInicial = "$disc:geral", onAbrirPerfil = { nav.navigate("u/$it") }) }
             composable("grupo/{id}") {
                 val gid = it.arguments?.getString("id") ?: ""
-                ChatScreen(api, sessao, canalInicial = "g:$gid", onAbrirPerfil = { u -> nav.navigate("u/$u") })
+                ChatScreen(api, sessao, disc = disc, canalInicial = "g:$gid", onAbrirPerfil = { u -> nav.navigate("u/$u") })
             }
             composable("grupos") { GruposScreen(api, sessao, onAbrirGrupo = { nav.navigate("grupo/$it") }) }
             composable("turma") { TurmaScreen(api, sessao, onAbrirPerfil = { nav.navigate("u/$it") }) }

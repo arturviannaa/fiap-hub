@@ -45,7 +45,9 @@ export default async function Painel() {
     ),
   ])
 
-  const concluidas = new Set(feitas.map((f) => f.aula_slug))
+  // Só conta o progresso das aulas DESTA disciplina (o progresso é global no banco).
+  const slugsDaDisc = new Set(aulas.map((a) => a.slug))
+  const concluidas = new Set(feitas.map((f) => f.aula_slug).filter((sl) => slugsDaDisc.has(sl)))
   const pct = aulas.length ? Math.round((concluidas.size / aulas.length) * 100) : 0
   const continuar = aulas.find((a) => !concluidas.has(a.slug)) ?? aulas[0]
   const novas = aulas.filter(ehNova).slice(0, 3)
