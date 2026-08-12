@@ -276,6 +276,48 @@ export async function renomearUsuario(usuarioId: number, dados: FormData) {
 
 // ---- perfil --------------------------------------------------------------
 
+const MIMES_FOTO: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+}
+const MAX_FOTO = 5 * 1024 * 1024
+
+export async function salvarFoto(dados: FormData) {
+  const u = await usuarioAtual()
+  if (!permitido(`foto:${u.id}`, 10, 600_000)) return { erro: 'Muitas trocas seguidas. Espere um pouco.' }
+
+  const foto = dados.get('foto')
+  if (!(foto instanceof File) || foto.size === 0) return { erro: 'Escolha uma imagem.' }
+  if (foto.size > MAX_FOTO) return { erro: 'Imagem maior que 5 MB.' }
+  const ext = MIMES_FOTO[foto.type]
+  if (!ext) return { erro: 'Formato inválido — use JPG, PNG, WebP ou GIF.' }
+
+  const armazenado = `avatar-${randomUUID()}.${ext}`
+  await mkdir(UPLOAD_DIR, { recursive: true })
+  await writeFile(join(UPLOAD_DIR, armazenado), Buffer.from(await foto.arrayBuffer()))
+
+  const antiga = await um<{ foto: string | null }>('SELECT foto FROM usuarios WHERE id = $1', [u.id])
+  await sql('UPDATE usuarios SET foto = $1 WHERE id = $2', [armazenado, u.id])
+  // Remove a foto anterior do disco para não acumular lixo.
+  if (antiga?.foto) await unlink(join(UPLOAD_DIR, antiga.foto)).catch(() => {})
+
+  revalidatePath('/perfil')
+  revalidatePath('/', 'layout')
+  revalidatePath('/turma')
+  return { ok: true }
+}
+
+export async function removerFoto() {
+  const u = await usuarioAtual()
+  const antiga = await um<{ foto: string | null }>('SELECT foto FROM usuarios WHERE id = $1', [u.id])
+  await sql('UPDATE usuarios SET foto = NULL WHERE id = $1', [u.id])
+  if (antiga?.foto) await unlink(join(UPLOAD_DIR, antiga.foto)).catch(() => {})
+  revalidatePath('/perfil')
+  revalidatePath('/', 'layout')
+}
+
 export async function salvarPerfil(dados: FormData) {
   const u = await usuarioAtual()
   await sql('UPDATE usuarios SET nome = $1, bio = $2 WHERE id = $3', [

@@ -54,7 +54,7 @@ export function Shell({
   usuario,
   children,
 }: {
-  usuario: { nome: string; email: string; papel: string }
+  usuario: { id: number; nome: string; email: string; papel: string; foto: string | null }
   children: React.ReactNode
 }) {
   const caminho = usePathname()
@@ -98,7 +98,7 @@ export function Shell({
           className="flex items-center gap-3 rounded-xl p-2 hover:bg-[var(--painel-2)]"
           title="Meu perfil"
         >
-          <Avatar nome={usuario.nome} tamanho={34} />
+          <Avatar nome={usuario.nome} tamanho={34} usuarioId={usuario.id} foto={usuario.foto} />
           <span className="min-w-0 leading-tight">
             <span className="block truncate text-sm font-medium">{usuario.nome}</span>
             <span className="block truncate text-[11px] suave">{usuario.email}</span>

@@ -11,7 +11,7 @@ async function acao(_estado: Estado, dados: FormData): Promise<Estado> {
   return (await criarGrupo(dados)) as Estado
 }
 
-export function FormGrupo({ turma }: { turma: { id: number; nome: string }[] }) {
+export function FormGrupo({ turma }: { turma: { id: number; nome: string; foto: string | null }[] }) {
   const [estado, enviar, pendente] = useActionState<Estado, FormData>(acao, null)
 
   return (
@@ -39,7 +39,7 @@ export function FormGrupo({ turma }: { turma: { id: number; nome: string }[] }) 
               className="flex cursor-pointer items-center gap-2 rounded-lg p-1.5 text-sm hover:bg-[var(--painel-2)]"
             >
               <input type="checkbox" name="membros" value={p.id} className="accent-fiap-500" />
-              <Avatar nome={p.nome} tamanho={24} />
+              <Avatar nome={p.nome} tamanho={24} usuarioId={p.id} foto={p.foto} />
               <span className="truncate">{p.nome}</span>
             </label>
           ))}

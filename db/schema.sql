@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   criado_em     TIMESTAMPTZ NOT NULL DEFAULT now(),
   visto_em      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Foto de perfil: nome do arquivo no disco (UPLOAD_DIR), nulo = usa as iniciais.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto TEXT;
 
 CREATE TABLE IF NOT EXISTS progresso (
   usuario_id   INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,

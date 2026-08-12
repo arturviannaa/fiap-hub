@@ -20,12 +20,13 @@ export default async function Turma() {
     email: string
     bio: string
     papel: string
+    foto: string | null
     visto_em: string
     aulas: string
     notas: string
     arquivos: string
   }>(
-    `SELECT u.id, u.nome, u.email, u.bio, u.papel, u.visto_em,
+    `SELECT u.id, u.nome, u.email, u.bio, u.papel, u.foto, u.visto_em,
             (SELECT count(*) FROM progresso p WHERE p.usuario_id = u.id)::text AS aulas,
             (SELECT count(*) FROM notas n WHERE n.usuario_id = u.id AND n.publica)::text AS notas,
             (SELECT count(*) FROM arquivos a WHERE a.usuario_id = u.id AND a.publico)::text AS arquivos
@@ -48,7 +49,7 @@ export default async function Turma() {
           const pct = total ? Math.round((Number(m.aulas) / total) * 100) : 0
           return (
             <li key={m.id} className="painel flex gap-3 p-4">
-              <Avatar nome={m.nome} tamanho={44} />
+              <Avatar nome={m.nome} tamanho={44} usuarioId={m.id} foto={m.foto} />
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="truncate font-medium">

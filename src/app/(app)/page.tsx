@@ -23,8 +23,8 @@ export default async function Painel() {
 
   const [feitas, mensagens, arquivos, notas] = await Promise.all([
     sql<{ aula_slug: string }>('SELECT aula_slug FROM progresso WHERE usuario_id = $1', [u.id]),
-    sql<{ corpo: string; canal: string; nome: string; criado_em: string }>(
-      `SELECT m.corpo, m.canal, u.nome, m.criado_em FROM mensagens m
+    sql<{ corpo: string; canal: string; nome: string; criado_em: string; usuario_id: number; foto: string | null }>(
+      `SELECT m.corpo, m.canal, u.nome, m.criado_em, m.usuario_id, u.foto FROM mensagens m
        JOIN usuarios u ON u.id = m.usuario_id ORDER BY m.id DESC LIMIT 5`,
     ),
     sql<{ id: number; nome: string; criado_em: string; autor: string }>(
@@ -150,7 +150,7 @@ export default async function Painel() {
           <ul className="space-y-3">
             {mensagens.map((m, i) => (
               <li key={i} className="flex gap-2.5">
-                <Avatar nome={m.nome} tamanho={28} />
+                <Avatar nome={m.nome} tamanho={28} usuarioId={m.usuario_id} foto={m.foto} />
                 <div className="min-w-0">
                   <p className="text-xs suave">
                     {m.nome.split(' ')[0]} · #{m.canal} · {quando(m.criado_em)}

@@ -10,6 +10,7 @@ type Nota = {
   usuario_id: number
   atualizado_em: string
   autor: string
+  autor_foto: string | null
 }
 
 export function NotasDaAula({
@@ -49,7 +50,7 @@ export function NotasDaAula({
         {notas.map((n) => (
           <li key={n.id} className="rounded-xl border p-3">
             <div className="mb-1 flex items-center gap-2 text-xs suave">
-              <Avatar nome={n.autor} tamanho={20} />
+              <Avatar nome={n.autor} tamanho={20} usuarioId={n.usuario_id} foto={n.autor_foto} />
               <span>{n.usuario_id === usuarioId ? 'você' : n.autor.split(' ')[0]}</span>
               <span>·</span>
               <span>{quando(n.atualizado_em)}</span>

@@ -296,7 +296,7 @@ export function Chat({
                     agrupa ? '' : 'mt-3'
                   }`}
                 >
-                  <div className="w-8 shrink-0">{!agrupa && <Avatar nome={m.nome} tamanho={32} />}</div>
+                  <div className="w-8 shrink-0">{!agrupa && <Avatar nome={m.nome} tamanho={32} usuarioId={m.usuario_id} foto={m.foto} />}</div>
                   <div className="min-w-0 flex-1">
                     {!agrupa && (
                       <p className="flex items-baseline gap-2">

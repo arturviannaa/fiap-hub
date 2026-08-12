@@ -63,6 +63,7 @@ export type MensagemChat = {
   usuario_id: number
   nome: string
   papel: string
+  foto: string | null
   arquivo_id: number | null
   arquivo_nome: string | null
   arquivo_mime: string | null
@@ -70,7 +71,7 @@ export type MensagemChat = {
 }
 
 export const SELECT_MENSAGEM = `
-  SELECT m.id, m.canal, m.corpo, m.criado_em, m.usuario_id, u.nome, u.papel,
+  SELECT m.id, m.canal, m.corpo, m.criado_em, m.usuario_id, u.nome, u.papel, u.foto,
          m.arquivo_id, a.nome AS arquivo_nome, a.mime AS arquivo_mime, a.tamanho AS arquivo_tamanho
   FROM mensagens m
   JOIN usuarios u ON u.id = m.usuario_id
