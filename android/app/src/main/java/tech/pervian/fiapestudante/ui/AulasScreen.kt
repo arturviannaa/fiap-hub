@@ -22,19 +22,20 @@ import tech.pervian.fiapestudante.data.RespAulas
 import tech.pervian.fiapestudante.data.Sessao
 
 @Composable
-fun AulasScreen(api: Api, sessao: Sessao, onAbrirAula: (String) -> Unit) {
+fun AulasScreen(api: Api, sessao: Sessao, disc: String, onAbrirAula: (String) -> Unit) {
     var dados by remember { mutableStateOf<RespAulas?>(null) }
     var erro by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) {
-        try { dados = api.aulas() } catch (e: Exception) { erro = e.message }
+    LaunchedEffect(disc) {
+        try { dados = api.aulas(disc) } catch (e: Exception) { erro = e.message }
     }
 
     val d = dados
     if (erro != null) { CentroTexto(erro!!); return }
     if (d == null) { Carregando(); return }
 
-    val feitas = d.concluidas.toSet()
+    val slugsDaDisc = d.modulos.flatMap { it.aulas }.map { it.slug }.toSet()
+    val feitas = d.concluidas.filter { it in slugsDaDisc }.toSet()
     val totalAulas = d.modulos.sumOf { it.aulas.size }
     val pct = if (totalAulas > 0) feitas.size * 100 / totalAulas else 0
 

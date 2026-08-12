@@ -23,13 +23,13 @@ import tech.pervian.fiapestudante.data.RespNotas
 import tech.pervian.fiapestudante.data.Sessao
 
 @Composable
-fun AnotacoesScreen(api: Api, sessao: Sessao) {
+fun AnotacoesScreen(api: Api, sessao: Sessao, disc: String) {
     var aba by remember { mutableStateOf("minhas") }
     var dados by remember { mutableStateOf<RespNotas?>(null) }
     var criando by remember { mutableStateOf(false) }
     val escopo = rememberCoroutineScope()
 
-    suspend fun recarregar() { dados = runCatching { api.notas(aba) }.getOrNull() }
+    suspend fun recarregar() { dados = runCatching { api.notas(aba, disc) }.getOrNull() }
     LaunchedEffect(aba) { recarregar() }
 
     Scaffold(
@@ -90,7 +90,7 @@ fun AnotacoesScreen(api: Api, sessao: Sessao) {
                     enabled = corpo.trim().isNotEmpty(),
                     onClick = {
                         escopo.launch {
-                            runCatching { api.criarNota(corpo, titulo, publica) }
+                            runCatching { api.criarNota(corpo, titulo, publica, disc) }
                             criando = false; aba = "minhas"; recarregar()
                         }
                     },

@@ -1,6 +1,8 @@
 package tech.pervian.fiapestudante.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -81,9 +83,5 @@ fun Tags(papeis: List<String>, mudo: Boolean = false) {
 fun corDoModulo() = FiapMagenta
 
 // Clique sem o efeito ripple (usado no título/switcher da top bar).
-fun androidx.compose.ui.Modifier.clickableSemRipple(onClick: () -> Unit): androidx.compose.ui.Modifier =
-    this.then(androidx.compose.foundation.clickable(
-        interactionSource = androidx.compose.foundation.interaction.MutableInteractionSource(),
-        indication = null,
-        onClick = onClick,
-    ))
+fun Modifier.clickableSemRipple(onClick: () -> Unit): Modifier =
+    this.clickable(interactionSource = MutableInteractionSource(), indication = null, onClick = onClick)

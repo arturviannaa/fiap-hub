@@ -42,7 +42,7 @@ import tech.pervian.fiapestudante.data.*
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ChatScreen(api: Api, sessao: Sessao, canalInicial: String = "geral", onAbrirPerfil: (Int) -> Unit = {}) {
+fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: String = "python:geral", onAbrirPerfil: (Int) -> Unit = {}) {
     var canal by remember { mutableStateOf(canalInicial) }
     var dados by remember { mutableStateOf<RespChat?>(null) }
     val mensagens = remember { mutableStateListOf<Mensagem>() }
@@ -70,7 +70,7 @@ fun ChatScreen(api: Api, sessao: Sessao, canalInicial: String = "geral", onAbrir
     var apagar by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(canal) {
-        dados = try { api.chat(canal) } catch (e: Exception) { null }
+        dados = try { api.chat(canal, disc) } catch (e: Exception) { null }
         mensagens.clear()
         dados?.mensagens?.let { mensagens.addAll(it) }
     }
