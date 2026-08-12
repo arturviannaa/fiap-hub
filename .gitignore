@@ -9,3 +9,8 @@ uploads/
 .DS_Store
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# segredos firebase
+secrets/
+*firebase-adminsdk*.json
+android/app/google-services.json

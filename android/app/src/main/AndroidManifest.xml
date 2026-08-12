@@ -25,6 +25,18 @@
             </intent-filter>
         </activity>
 
+        <!-- Push FCM. -->
+        <service
+            android:name=".FiapFcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="novidades" />
+
         <!-- Entrega a APK baixada ao instalador do sistema (auto-update). -->
         <provider
             android:name="androidx.core.content.FileProvider"
