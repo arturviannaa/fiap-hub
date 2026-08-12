@@ -1,6 +1,6 @@
 import { sql } from '@/lib/db'
 import { naoAutorizado, usuarioDoToken } from '@/lib/mobile-auth'
-import { canaisDaDisciplina, SELECT_MENSAGEM, canalPermitido, gruposDoUsuario, type MensagemChat } from '@/lib/chat'
+import { anexarReacoes, canaisDaDisciplina, SELECT_MENSAGEM, canalPermitido, gruposDoUsuario, type MensagemChat } from '@/lib/chat'
 import { COOLDOWN_CHAT_MS, esperaRestante, limparTexto, marcarAcao } from '@/lib/limites'
 import { pushMensagemGrupo } from '@/lib/push'
 
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   return Response.json({
     canais: canaisDaDisciplina(disc),
     grupos,
-    mensagens: mensagens.reverse(),
+    mensagens: await anexarReacoes(mensagens.reverse(), u.id),
     eu: { id: u.id, nome: u.nome, papeis: u.papeis },
   })
 }

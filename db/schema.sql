@@ -137,3 +137,38 @@ UPDATE mensagens SET canal = 'python:' || canal
 DROP TRIGGER IF EXISTS mensagens_notifica ON mensagens;
 CREATE TRIGGER mensagens_notifica AFTER INSERT OR DELETE ON mensagens
   FOR EACH ROW EXECUTE FUNCTION notifica_mensagem();
+
+
+-- Reações às mensagens do chat: um emoji por (mensagem, usuário). Toggle no app.
+CREATE TABLE IF NOT EXISTS reacoes (
+  mensagem_id INTEGER NOT NULL REFERENCES mensagens(id) ON DELETE CASCADE,
+  usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  emoji       TEXT NOT NULL,
+  criado_em   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (mensagem_id, usuario_id, emoji)
+);
+CREATE INDEX IF NOT EXISTS reacoes_msg_idx ON reacoes (mensagem_id);
+
+-- Mudança de reação avisa o mesmo barramento do chat (op 'reac'): quem está com
+-- o canal aberto recebe a mensagem re-renderizada com a contagem nova.
+CREATE OR REPLACE FUNCTION notifica_reacao() RETURNS TRIGGER AS $$
+DECLARE c TEXT; mid INTEGER;
+BEGIN
+  mid := COALESCE(NEW.mensagem_id, OLD.mensagem_id);
+  SELECT canal INTO c FROM mensagens WHERE id = mid;
+  IF c IS NOT NULL THEN PERFORM pg_notify('chat', 'reac:' || mid::text || ':' || c); END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS reacoes_notifica ON reacoes;
+CREATE TRIGGER reacoes_notifica AFTER INSERT OR DELETE ON reacoes
+  FOR EACH ROW EXECUTE FUNCTION notifica_reacao();
+
+
+-- Dias em que cada pessoa esteve ativa — base da ofensiva (streak). Uma linha por dia.
+CREATE TABLE IF NOT EXISTS atividade (
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  dia        DATE NOT NULL DEFAULT current_date,
+  PRIMARY KEY (usuario_id, dia)
+);
