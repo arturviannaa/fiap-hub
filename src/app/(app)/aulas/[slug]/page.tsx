@@ -111,6 +111,8 @@ export default async function PaginaAula({ params }: { params: Promise<{ slug: s
 
         <div className="mt-7 space-y-5">
           {aula.blocos.map((b, i) =>
+            // ponytail: HTML confiável (repo da professora, não input de aluno).
+            // Sanitizar quebraria tabela do pandas; upgrade só se a fonte deixar de ser confiável.
             b.tipo === 'md' ? (
               <div key={i} className="aula-md" dangerouslySetInnerHTML={{ __html: b.html }} />
             ) : (

@@ -16,10 +16,40 @@ Em produção: **https://fiap.pervian.tech**
 - **Anotações** — por aula ou avulsas, privadas (só você) ou públicas (toda a turma).
 - **Materiais** — upload até 25 MB, público ou privado, opcionalmente ligado a uma aula.
   Arquivo privado só sai pela URL para o dono.
-- **Chat em tempo real** — canais `geral`, `dúvidas`, `materiais` e `provas`.
+- **Chat em tempo real** — canais `geral`, `dúvidas`, `materiais` e `provas`, com
+  **anexos** (arraste, cole um print com Ctrl+V, ou escolha o arquivo). Admin apaga
+  qualquer mensagem; some da tela de todos na hora.
+- **Grupos privados** — cada aluno cria grupos e escolhe quem entra; mensagens e
+  arquivos do grupo só aparecem para os membros.
+- **Tags de perfil** — `aluno` (padrão), `professor`, `admin`. O admin define as tags
+  e corrige nomes na aba Turma.
 - **Busca** — no conteúdo das aulas, nas anotações visíveis e nos materiais.
 - **Turma** — quem está estudando, progresso e contribuições.
 - Tema claro/escuro, responsivo do celular ao desktop.
+
+## Segurança
+
+Auditado ofensivamente (IDOR, path traversal, XSS, escalação de privilégio, flood).
+As defesas em camadas:
+
+- **Autorização no SQL** — arquivo, nota, mensagem e grupo só saem para quem é dono
+  ou membro; a regra vive na cláusula `WHERE`, não espalhada. Arquivo privado responde
+  `404` (indistinguível de inexistente) para quem não tem acesso.
+- **Anti-flood por usuário** (imune a NAT, keyed por id): cooldown de **10 s** entre
+  mensagens — enforçado no servidor, não só no cliente — e cotas de notas/uploads.
+- **Anti-travazap** — o texto passa por um saneador que corta zalgo (pilha de acentos),
+  caracteres invisíveis, repetição absurda e muro de linhas; teto de 1200 caracteres.
+- **Rate limit por IP** no middleware e no nginx, **generoso de propósito**: a turma
+  toda pode estar atrás de um único IP (WiFi da faculdade). O freio fino é por usuário.
+- **Login** protegido contra força bruta (limite de borda no nginx + bcrypt custo 12).
+- **Download** com `Content-Security-Policy: sandbox` e `nosniff`; qualquer coisa que
+  não seja imagem/PDF/texto desce como `attachment`, nunca executa no domínio.
+
+Suítes de ataque em `scripts/` (rodam contra a instância local).
+
+Assunção conhecida: o conteúdo das aulas vem do repositório da professora e é renderizado
+como HTML confiável. Um `ponytail:` marca esse ponto — sanitizar quebraria as tabelas do
+pandas, e o vetor exigiria comprometer o GitHub dela.
 
 ## Stack
 
