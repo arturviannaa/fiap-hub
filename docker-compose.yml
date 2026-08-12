@@ -1,0 +1,65 @@
+name: fiap-hub
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fiap
+      POSTGRES_USER: fiap
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - dados-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U fiap -d fiap']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        REPO_CONTEUDO: ${REPO_CONTEUDO:-https://github.com/mariacmartins/computational_thinking_with_python}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://fiap:${POSTGRES_PASSWORD}@postgres:5432/fiap
+      AUTH_URL: ${AUTH_URL}
+      AUTH_SECRET: ${AUTH_SECRET:?defina AUTH_SECRET no .env}
+      AUTH_TRUST_HOST: 'true'
+      ALLOWED_EMAIL_DOMAINS: ${ALLOWED_EMAIL_DOMAINS:-fiap.com.br,alunos.fiap.com.br}
+      CODIGO_TURMA: ${CODIGO_TURMA:?defina CODIGO_TURMA no .env}
+      AUTH_MICROSOFT_ENTRA_ID_ID: ${AUTH_MICROSOFT_ENTRA_ID_ID:-}
+      AUTH_MICROSOFT_ENTRA_ID_SECRET: ${AUTH_MICROSOFT_ENTRA_ID_SECRET:-}
+      AUTH_MICROSOFT_ENTRA_ID_ISSUER: ${AUTH_MICROSOFT_ENTRA_ID_ISSUER:-}
+      CONTENT_DIR: /app/content
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      # rw porque o entrypoint semeia o conteudo inicial num volume vazio
+      - conteudo:/app/content
+      - uploads:/app/uploads
+    ports:
+      - '127.0.0.1:8082:3000'
+
+  # Traz aulas novas do repo da professora sem ninguem precisar fazer deploy.
+  sync:
+    build:
+      context: .
+      target: sync
+    restart: unless-stopped
+    environment:
+      REPO_CONTEUDO: ${REPO_CONTEUDO:-https://github.com/mariacmartins/computational_thinking_with_python}
+      INTERVALO_SYNC: ${INTERVALO_SYNC:-1800}
+    volumes:
+      - conteudo:/app/content
+      - repo-disciplina:/app/repo
+
+volumes:
+  dados-postgres:
+  conteudo:
+  uploads:
+  repo-disciplina:

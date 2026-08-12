@@ -1,0 +1,33 @@
+{
+  "name": "fiap-hub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "content": "node scripts/build-content.mjs",
+    "test": "node scripts/build-content.mjs && node scripts/test-content.mjs",
+    "dev": "npm run content && next dev",
+    "build": "npm run content && next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@auth/core": "^0.40.0",
+    "bcryptjs": "^3.0.2",
+    "lucide-react": "^1.31.0",
+    "next": "^15.5.4",
+    "next-auth": "^5.0.0-beta.29",
+    "pg": "^8.16.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^24.5.2",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.12",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2"
+  }
+}
