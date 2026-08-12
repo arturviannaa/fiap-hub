@@ -41,6 +41,7 @@ data class Modulo(
 @Serializable
 data class RespAulas(
     val disciplina: Disciplina = Disciplina(),
+    val online: Int = 0,
     val concluidas: List<String> = emptyList(),
     val modulos: List<Modulo> = emptyList(),
 )

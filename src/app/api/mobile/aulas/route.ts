@@ -10,10 +10,14 @@ export async function GET(req: Request) {
 
   const disc = new URL(req.url).searchParams.get('disciplina') || 'python'
   const c = conteudo(disc)
-  const feitas = await sql<{ aula_slug: string }>('SELECT aula_slug FROM progresso WHERE usuario_id = $1', [u.id])
+  const [feitas, [{ online }]] = await Promise.all([
+    sql<{ aula_slug: string }>('SELECT aula_slug FROM progresso WHERE usuario_id = $1', [u.id]),
+    sql<{ online: string }>("SELECT count(*)::text AS online FROM usuarios WHERE visto_em > now() - interval '90 seconds'"),
+  ])
 
   return Response.json({
     disciplina: c.disciplina,
+    online: Number(online),
     concluidas: feitas.map((f) => f.aula_slug),
     modulos: c.modulos.map((m) => ({
       slug: m.slug,
