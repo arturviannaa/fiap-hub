@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { CANAIS, SELECT_MENSAGEM, canalPermitido, gruposDoUsuario, type MensagemChat } from '@/lib/chat'
+import { canaisDaDisciplina, SELECT_MENSAGEM, canalPermitido, gruposDoUsuario, type MensagemChat } from '@/lib/chat'
+import { discAtiva } from '@/lib/disciplina'
 import { Chat } from '@/components/chat'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +14,9 @@ export default async function PaginaChat({
   searchParams: Promise<{ canal?: string }>
 }) {
   const u = await usuarioAtual()
-  const canal = (await searchParams).canal || 'geral'
+  const disc = await discAtiva()
+  if (!disc) redirect('/disciplinas')
+  const canal = (await searchParams).canal || `${disc}:geral`
   // Grupo alheio nao existe do ponto de vista de quem nao participa.
   if (!(await canalPermitido(canal, u.id))) redirect('/chat')
 
@@ -25,7 +28,7 @@ export default async function PaginaChat({
   return (
     <Chat
       canal={canal}
-      canais={[...CANAIS]}
+      canais={canaisDaDisciplina(disc)}
       grupos={grupos}
       historico={historico.reverse()}
       usuario={{ id: u.id, nome: u.nome, papeis: u.papeis }}

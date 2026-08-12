@@ -63,6 +63,8 @@ CREATE TABLE IF NOT EXISTS notas (
 );
 CREATE INDEX IF NOT EXISTS notas_aula_idx ON notas (aula_slug);
 CREATE INDEX IF NOT EXISTS notas_usuario_idx ON notas (usuario_id);
+-- Disciplina a que a nota pertence (notas avulsas precisam saber).
+ALTER TABLE notas ADD COLUMN IF NOT EXISTS disciplina TEXT NOT NULL DEFAULT 'python';
 
 CREATE TABLE IF NOT EXISTS arquivos (
   id           SERIAL PRIMARY KEY,
@@ -78,6 +80,8 @@ CREATE TABLE IF NOT EXISTS arquivos (
   criado_em    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS arquivos_aula_idx ON arquivos (aula_slug);
+-- Disciplina do material (anexos de chat ficam como 'python', não são listados).
+ALTER TABLE arquivos ADD COLUMN IF NOT EXISTS disciplina TEXT NOT NULL DEFAULT 'python';
 
 -- Grupos privados criados pelos proprios alunos. O chat do grupo usa o mesmo
 -- mecanismo dos canais fixos: o canal se chama 'g:<id>'.
@@ -124,6 +128,11 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Migração dos canais fixos legados (sem prefixo) para o padrão por disciplina.
+-- Grupos (g:ID) ficam como estão (compartilhados entre disciplinas).
+UPDATE mensagens SET canal = 'python:' || canal
+  WHERE canal IN ('geral','duvidas','materiais','provas');
 
 DROP TRIGGER IF EXISTS mensagens_notifica ON mensagens;
 CREATE TRIGGER mensagens_notifica AFTER INSERT OR DELETE ON mensagens

@@ -54,9 +54,11 @@ function TemaBotao() {
 
 export function Shell({
   usuario,
+  disciplina,
   children,
 }: {
   usuario: { id: number; nome: string; email: string; papeis: string[]; foto: string | null }
+  disciplina?: { nome: string; curto: string; cor: string } | null
   children: React.ReactNode
 }) {
   const caminho = usePathname()
@@ -93,6 +95,21 @@ export function Shell({
           <span className="block text-[11px] suave">Plataforma de Estudos</span>
         </span>
       </Link>
+
+      {disciplina && (
+        <Link
+          href="/disciplinas"
+          className="flex items-center gap-2 rounded-xl border p-2.5 transition-colors hover:bg-[var(--painel-2)]"
+          title="Trocar de disciplina"
+        >
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: disciplina.cor }} />
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate text-sm font-medium">{disciplina.curto}</span>
+            <span className="block text-[11px] suave">trocar disciplina</span>
+          </span>
+        </Link>
+      )}
+
       {nav}
       <div className="mt-auto">
         <Link

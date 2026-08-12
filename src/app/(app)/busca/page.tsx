@@ -3,6 +3,7 @@ import { BookOpen, FileText, NotebookPen, Search } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { todasAulas } from '@/lib/conteudo'
+import { discOuPadrao } from '@/lib/disciplina'
 import { Cabecalho } from '@/components/cabecalho'
 import { Campo, Selo, Vazio, tamanhoLegivel } from '@/components/ui'
 
@@ -34,10 +35,11 @@ function Destaque({ texto, termo }: { texto: string; termo: string }) {
 
 export default async function Busca({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const u = await usuarioAtual()
+  const disc = await discOuPadrao()
   const q = ((await searchParams).q || '').trim()
 
   const aulas = q
-    ? todasAulas()
+    ? todasAulas(disc)
         .map((a) => ({
           aula: a,
           hit:

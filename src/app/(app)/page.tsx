@@ -3,6 +3,8 @@ import { ArrowRight, Files, MessageSquare, NotebookPen, Sparkles } from 'lucide-
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { conteudo, ehNova, todasAulas } from '@/lib/conteudo'
+import { discAtiva } from '@/lib/disciplina'
+import { redirect } from 'next/navigation'
 import { Avatar, BotaoLink, Selo, quando } from '@/components/ui'
 import { IconeModulo } from '@/components/icone-modulo'
 
@@ -18,22 +20,28 @@ function saudacao() {
 
 export default async function Painel() {
   const u = await usuarioAtual()
-  const dados = conteudo()
-  const aulas = todasAulas()
+  const disc = await discAtiva()
+  if (!disc) redirect('/disciplinas')
+  const dados = conteudo(disc)
+  const aulas = todasAulas(disc)
 
   const [feitas, mensagens, arquivos, notas] = await Promise.all([
     sql<{ aula_slug: string }>('SELECT aula_slug FROM progresso WHERE usuario_id = $1', [u.id]),
     sql<{ corpo: string; canal: string; nome: string; criado_em: string; usuario_id: number; foto: string | null }>(
       `SELECT m.corpo, m.canal, u.nome, m.criado_em, m.usuario_id, u.foto FROM mensagens m
-       JOIN usuarios u ON u.id = m.usuario_id ORDER BY m.id DESC LIMIT 5`,
+       JOIN usuarios u ON u.id = m.usuario_id WHERE m.canal LIKE $1 ORDER BY m.id DESC LIMIT 5`,
+      [`${disc}:%`],
     ),
     sql<{ id: number; nome: string; criado_em: string; autor: string }>(
       `SELECT a.id, a.nome, a.criado_em, u.nome AS autor FROM arquivos a
-       JOIN usuarios u ON u.id = a.usuario_id WHERE a.publico ORDER BY a.id DESC LIMIT 5`,
+       JOIN usuarios u ON u.id = a.usuario_id WHERE a.publico AND a.disciplina = $1 AND a.descricao <> 'anexo do chat'
+       ORDER BY a.id DESC LIMIT 5`,
+      [disc],
     ),
     sql<{ id: number; titulo: string; corpo: string; aula_slug: string | null; autor: string }>(
       `SELECT n.id, n.titulo, n.corpo, n.aula_slug, u.nome AS autor FROM notas n
-       JOIN usuarios u ON u.id = n.usuario_id WHERE n.publica ORDER BY n.id DESC LIMIT 5`,
+       JOIN usuarios u ON u.id = n.usuario_id WHERE n.publica AND n.disciplina = $1 ORDER BY n.id DESC LIMIT 5`,
+      [disc],
     ),
   ])
 
@@ -153,7 +161,7 @@ export default async function Painel() {
                 <Avatar nome={m.nome} tamanho={28} usuarioId={m.usuario_id} foto={m.foto} />
                 <div className="min-w-0">
                   <p className="text-xs suave">
-                    {m.nome.split(' ')[0]} · #{m.canal} · {quando(m.criado_em)}
+                    {m.nome.split(' ')[0]} · #{m.canal.split(':').pop()} · {quando(m.criado_em)}
                   </p>
                   <p className="line-clamp-2 text-sm">{m.corpo}</p>
                 </div>
