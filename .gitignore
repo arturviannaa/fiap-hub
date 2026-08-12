@@ -4,6 +4,7 @@ node_modules/
 .env.local
 content/
 repo/
+repos/
 uploads/
 *.log
 .DS_Store
