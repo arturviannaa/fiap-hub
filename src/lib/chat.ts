@@ -86,6 +86,34 @@ export type MensagemChat = {
   arquivo_tamanho: number | null
 }
 
+// Emojis que o app oferece para reagir. Qualquer coisa fora disso é rejeitada.
+export const EMOJIS_REACAO = ['👍', '❤️', '😂', '🎉', '🔥'] as const
+
+export type ReacaoResumo = { emoji: string; n: number; eu: boolean }
+
+// Anexa a lista de reações (contagem + se o usuário reagiu) a um lote de mensagens,
+// numa query só. Usado tanto no histórico quanto no re-fetch do SSE.
+export async function anexarReacoes<T extends { id: number }>(
+  msgs: T[],
+  usuarioId: number,
+): Promise<(T & { reacoes: ReacaoResumo[] })[]> {
+  if (!msgs.length) return []
+  const ids = msgs.map((m) => m.id)
+  const rs = await sql<{ mensagem_id: number; emoji: string; n: number; eu: boolean }>(
+    `SELECT mensagem_id, emoji, count(*)::int AS n, bool_or(usuario_id = $2) AS eu
+       FROM reacoes WHERE mensagem_id = ANY($1)
+      GROUP BY mensagem_id, emoji ORDER BY emoji`,
+    [ids, usuarioId],
+  )
+  const porMsg = new Map<number, ReacaoResumo[]>()
+  for (const r of rs) {
+    const arr = porMsg.get(r.mensagem_id) ?? []
+    arr.push({ emoji: r.emoji, n: r.n, eu: r.eu })
+    porMsg.set(r.mensagem_id, arr)
+  }
+  return msgs.map((m) => ({ ...m, reacoes: porMsg.get(m.id) ?? [] }))
+}
+
 export const SELECT_MENSAGEM = `
   SELECT m.id, m.canal, m.corpo, m.criado_em, m.usuario_id, u.nome, u.papeis, u.foto,
          m.arquivo_id, a.nome AS arquivo_nome, a.mime AS arquivo_mime, a.tamanho AS arquivo_tamanho

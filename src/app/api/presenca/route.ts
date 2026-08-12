@@ -11,5 +11,6 @@ export async function POST() {
   const id = (sessao?.user as any)?.id
   if (!id) return new Response(null, { status: 401 })
   await sql("UPDATE usuarios SET visto_em = now() WHERE id = $1 AND visto_em < now() - interval '30 seconds'", [id])
+  await sql('INSERT INTO atividade (usuario_id) VALUES ($1) ON CONFLICT DO NOTHING', [id])
   return new Response(null, { status: 204 })
 }

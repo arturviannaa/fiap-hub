@@ -13,5 +13,14 @@ export async function GET(req: Request) {
             (SELECT count(*) FROM mensagens WHERE usuario_id=$1)::text AS mensagens`,
     [u.id],
   )
-  return Response.json({ usuario: u, total: totalAulasGlobais(), stats: s })
+  // Ofensiva: dias consecutivos ativos, contando a partir de hoje (ou de ontem,
+  // se ainda não bateu o heartbeat de hoje). Sem gap = a sequência continua.
+  const [{ streak }] = await sql<{ streak: number }>(
+    `WITH d AS (SELECT dia, row_number() OVER (ORDER BY dia DESC) AS rn FROM atividade WHERE usuario_id = $1),
+          base AS (SELECT CASE WHEN EXISTS (SELECT 1 FROM atividade WHERE usuario_id = $1 AND dia = current_date)
+                               THEN current_date ELSE current_date - 1 END AS b)
+     SELECT count(*)::int AS streak FROM d, base WHERE d.dia = base.b - (d.rn - 1)::int`,
+    [u.id],
+  )
+  return Response.json({ usuario: u, total: totalAulasGlobais(), stats: s, streak })
 }

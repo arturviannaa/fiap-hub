@@ -6,5 +6,6 @@ export async function POST(req: Request) {
   const u = await usuarioDoToken(req)
   if (!u) return naoAutorizado()
   await sql("UPDATE usuarios SET visto_em = now() WHERE id = $1 AND visto_em < now() - interval '30 seconds'", [u.id])
+  await sql('INSERT INTO atividade (usuario_id) VALUES ($1) ON CONFLICT DO NOTHING', [u.id])
   return new Response(null, { status: 204 })
 }

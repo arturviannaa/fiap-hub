@@ -1,6 +1,6 @@
 import { sql } from '@/lib/db'
 import { usuarioDoToken } from '@/lib/mobile-auth'
-import { SELECT_MENSAGEM, barramento, canalPermitido, type MensagemChat } from '@/lib/chat'
+import { anexarReacoes, SELECT_MENSAGEM, barramento, canalPermitido, type MensagemChat } from '@/lib/chat'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +25,10 @@ export async function GET(req: Request) {
         if (c !== canal || !vivo) return
         if (op === 'del') return enviar({ op: 'del', id })
         const [msg] = await sql<MensagemChat>(`${SELECT_MENSAGEM} WHERE m.id = $1`, [id])
-        if (msg) enviar({ op: 'nova', msg })
+        if (msg) {
+          const [comReacoes] = await anexarReacoes([msg], u.id)
+          enviar({ op: 'nova', msg: comReacoes })
+        }
       }
 
       controller.enqueue(enc.encode(': conectado\n\n'))
