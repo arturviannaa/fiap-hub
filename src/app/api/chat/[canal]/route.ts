@@ -33,6 +33,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ canal: string }
         if (msg) enviar(msg)
       }
 
+      // Primeiro byte imediato: sem ele o proxy so libera os headers na
+      // primeira mensagem, e o onopen do EventSource nunca dispara.
+      controller.enqueue(codificador.encode(': conectado\n\n'))
+
       bus.on('mensagem', aoNotificar)
 
       // Comentario SSE periodico: mantem o proxy de pe e detecta aba fechada.
