@@ -3,18 +3,21 @@ import { ipDe, permitido } from '@/lib/limites'
 
 const PUBLICAS = ['/entrar', '/cadastro', '/api/auth', '/api/saude', '/conteudo', '/favicon.svg']
 
-// Teto por IP e por tipo de rota. Login e cadastro são os alvos óbvios de
-// força bruta; o SSE precisa de folga porque cada aba abre uma conexão.
+// Teto por IP. IMPORTANTE: a turma toda pode estar atrás de um único NAT (WiFi
+// da faculdade) — todos com o mesmo IP público. Então os limites por IP são um
+// freio grosso contra flood anônimo, generosos o bastante para uma sala inteira.
+// O abuso autenticado (spam, travazap) é barrado pelos limites POR USUÁRIO
+// (cooldown do chat, cota de notas/uploads), que são imunes ao NAT.
 const LIMITES: [RegExp, number, number][] = [
-  [/^\/api\/auth\/(callback|signin)/, 8, 60_000], // 8 tentativas de login por minuto
-  [/^\/api\/chat\//, 20, 60_000], // conexões do chat ao vivo
-  [/^\/api\//, 60, 60_000], // demais APIs (download de arquivo etc.)
-  [/^\//, 240, 60_000], // navegação normal: 4 páginas por segundo sustentadas
+  [/^\/api\/auth\/(callback|signin)/, 40, 60_000], // força bruta de login: ~1 sala tentando junto
+  [/^\/api\/chat\//, 200, 60_000], // SSE: 1 conexão por aba, sala inteira reconectando
+  [/^\/api\//, 600, 60_000], // downloads e demais APIs
+  [/^\//, 1200, 60_000], // navegação: 40 pessoas × 30 req/min
 ]
 
-// Server Action é POST na própria página: limite separado, senão o flood de
-// mensagens passaria pelo teto generoso de navegação.
-const LIMITE_ACAO = [40, 60_000] as const
+// Server Action é POST na própria página: limite por IP separado e alto (o
+// cooldown por usuário é quem segura o flood). Só barra um script disparando.
+const LIMITE_ACAO = [400, 60_000] as const
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
