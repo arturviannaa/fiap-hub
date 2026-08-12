@@ -2,6 +2,7 @@ import { sql } from '@/lib/db'
 import { naoAutorizado, usuarioDoToken } from '@/lib/mobile-auth'
 import { CANAIS, SELECT_MENSAGEM, canalPermitido, gruposDoUsuario, type MensagemChat } from '@/lib/chat'
 import { COOLDOWN_CHAT_MS, esperaRestante, limparTexto, marcarAcao } from '@/lib/limites'
+import { pushMensagemGrupo } from '@/lib/push'
 
 const moderador = (u: { papeis: string[] }) => u.papeis.includes('admin') || u.papeis.includes('professor')
 
@@ -45,5 +46,6 @@ export async function POST(req: Request) {
 
   marcarAcao(`chat:${u.id}`)
   await sql('INSERT INTO mensagens (canal, usuario_id, corpo) VALUES ($1,$2,$3)', [canal, u.id, texto])
+  pushMensagemGrupo(canal, u.id, u.nome, texto).catch(() => {})
   return Response.json({ ok: true })
 }

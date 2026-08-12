@@ -10,7 +10,7 @@ import { usuarioAtual } from './auth'
 import { canalPermitido } from './chat'
 import { COOLDOWN_CHAT_MS, esperaRestante, limparTexto, marcarAcao, permitido } from './limites'
 import { PAPEIS, type Papel } from './papeis'
-import { enviarPush } from './push'
+import { enviarPush, pushMensagemGrupo, pushTodos } from './push'
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads')
 
@@ -157,6 +157,7 @@ export async function enviarMensagemComAnexo(dados: FormData) {
     texto,
     arquivoId,
   ])
+  pushMensagemGrupo(canal, u.id, u.nome, texto).catch(() => {})
   return { ok: true }
 }
 
@@ -175,6 +176,7 @@ export async function enviarMensagem(canal: string, corpo: string) {
 
   marcarAcao(`chat:${u.id}`)
   await sql('INSERT INTO mensagens (canal, usuario_id, corpo) VALUES ($1,$2,$3)', [canal, u.id, texto])
+  pushMensagemGrupo(canal, u.id, u.nome, texto).catch(() => {})
   return { ok: true }
 }
 
@@ -298,6 +300,18 @@ export async function renomearUsuario(usuarioId: number, dados: FormData) {
   if (nome.length < 2) return
   await sql('UPDATE usuarios SET nome = $1 WHERE id = $2', [nome, usuarioId])
   revalidatePath('/turma')
+}
+
+/** Admin dispara um aviso por push pra turma inteira (site). */
+export async function enviarAviso(dados: FormData) {
+  const u = await usuarioAtual()
+  if (!u.papeis.includes('admin')) return { erro: 'Só admin.' }
+  if (!permitido(`aviso:${u.id}`, 10, 3_600_000)) return { erro: 'Muitos avisos por hora.' }
+  const titulo = limparTexto(String(dados.get('titulo') || ''), 80)
+  const corpo = limparTexto(String(dados.get('corpo') || ''), 200)
+  if (titulo.length < 2) return { erro: 'Escreva um título.' }
+  await pushTodos(titulo, corpo).catch(() => {})
+  return { ok: true }
 }
 
 // ---- perfil --------------------------------------------------------------
