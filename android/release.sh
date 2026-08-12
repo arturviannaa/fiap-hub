@@ -24,5 +24,6 @@ EOF
 echo "== enviando pra VPS =="
 scp "$APK" caixas7-vps:/var/www/fiap-app/FIAP-Estudante.apk
 scp /tmp/fiap-version.json caixas7-vps:/var/www/fiap-app/version.json
+scp landing/index.html landing/icon.png caixas7-vps:/var/www/fiap-app/
 
 echo "publicado: https://fiap.pervian.tech/app/FIAP-Estudante.apk (v$VN, code $VC)"
