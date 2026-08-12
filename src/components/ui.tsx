@@ -1,0 +1,128 @@
+import Link from 'next/link'
+import type { ComponentProps, ReactNode } from 'react'
+
+const BASE =
+  'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none'
+
+const VARIANTES = {
+  primario: 'bg-fiap-500 text-white hover:bg-fiap-600 shadow-sm shadow-fiap-500/25',
+  neutro: 'border hover:bg-[var(--painel-2)]',
+  fantasma: 'hover:bg-[var(--painel-2)] suave hover:text-[var(--texto)]',
+  perigo: 'border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10',
+} as const
+
+const TAMANHOS = {
+  sm: 'h-8 px-3 text-sm',
+  md: 'h-10 px-4 text-sm',
+  lg: 'h-11 px-5',
+  icone: 'h-9 w-9',
+} as const
+
+type BotaoProps = {
+  variante?: keyof typeof VARIANTES
+  tamanho?: keyof typeof TAMANHOS
+}
+
+export function Botao({
+  variante = 'primario',
+  tamanho = 'md',
+  className = '',
+  ...props
+}: ComponentProps<'button'> & BotaoProps) {
+  return <button className={`${BASE} ${VARIANTES[variante]} ${TAMANHOS[tamanho]} ${className}`} {...props} />
+}
+
+export function BotaoLink({
+  variante = 'primario',
+  tamanho = 'md',
+  className = '',
+  ...props
+}: ComponentProps<typeof Link> & BotaoProps) {
+  return <Link className={`${BASE} ${VARIANTES[variante]} ${TAMANHOS[tamanho]} ${className}`} {...props} />
+}
+
+export function Campo({ className = '', ...props }: ComponentProps<'input'>) {
+  return (
+    <input
+      className={`h-10 w-full rounded-xl border bg-[var(--painel)] px-3 text-sm placeholder:text-[var(--texto-2)] focus:border-fiap-500 focus:outline-none ${className}`}
+      {...props}
+    />
+  )
+}
+
+export function Area({ className = '', ...props }: ComponentProps<'textarea'>) {
+  return (
+    <textarea
+      className={`w-full rounded-xl border bg-[var(--painel)] p-3 text-sm leading-relaxed placeholder:text-[var(--texto-2)] focus:border-fiap-500 focus:outline-none ${className}`}
+      {...props}
+    />
+  )
+}
+
+export function Selo({ children, tom = 'neutro' }: { children: ReactNode; tom?: 'neutro' | 'fiap' | 'verde' }) {
+  const tons = {
+    neutro: 'bg-[var(--painel-2)] suave',
+    fiap: 'bg-fiap-500/12 text-fiap-600 dark:text-fiap-400',
+    verde: 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400',
+  }
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${tons[tom]}`}>
+      {children}
+    </span>
+  )
+}
+
+export function Vazio({ icone, titulo, texto }: { icone: ReactNode; titulo: string; texto: string }) {
+  return (
+    <div className="painel flex flex-col items-center gap-2 px-6 py-14 text-center">
+      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--painel-2)] suave">{icone}</div>
+      <p className="font-medium">{titulo}</p>
+      <p className="max-w-sm text-sm suave">{texto}</p>
+    </div>
+  )
+}
+
+const CORES = ['#ed145b', '#7c5cff', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6']
+
+export function Avatar({ nome, tamanho = 36 }: { nome: string; tamanho?: number }) {
+  const iniciais = nome
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('')
+  // Cor derivada do nome: estavel entre sessoes e sem upload de foto.
+  let h = 0
+  for (const c of nome) h = (h * 31 + c.charCodeAt(0)) >>> 0
+  const cor = CORES[h % CORES.length]
+  return (
+    <span
+      className="grid shrink-0 place-items-center rounded-full font-semibold text-white"
+      style={{ width: tamanho, height: tamanho, background: cor, fontSize: tamanho * 0.38 }}
+      aria-hidden
+    >
+      {iniciais || '?'}
+    </span>
+  )
+}
+
+export function quando(data: string | Date) {
+  const d = typeof data === 'string' ? new Date(data) : data
+  const seg = (Date.now() - d.getTime()) / 1000
+  if (seg < 60) return 'agora'
+  if (seg < 3600) return `${Math.floor(seg / 60)} min`
+  if (seg < 86400) return `${Math.floor(seg / 3600)} h`
+  if (seg < 604800) return `${Math.floor(seg / 86400)} d`
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+}
+
+export function tamanhoLegivel(bytes: number) {
+  const u = ['B', 'KB', 'MB', 'GB']
+  let i = 0
+  let n = bytes
+  while (n >= 1024 && i < u.length - 1) {
+    n /= 1024
+    i++
+  }
+  return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${u[i]}`
+}

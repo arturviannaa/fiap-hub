@@ -1,0 +1,306 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-fiap-50: #fff1f5;
+  --color-fiap-100: #ffe4ec;
+  --color-fiap-200: #fecdd9;
+  --color-fiap-300: #fda4bd;
+  --color-fiap-400: #fb7099;
+  --color-fiap-500: #ed145b;
+  --color-fiap-600: #d90b4f;
+  --color-fiap-700: #b70842;
+  --color-fiap-800: #990a3b;
+  --color-fiap-900: #830c37;
+
+  --font-sans: 'Inter var', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Tokens de superficie: um nome, dois temas. Todo componente usa estes. */
+:root {
+  --fundo: #f7f7f9;
+  --painel: #ffffff;
+  --painel-2: #f2f3f6;
+  --borda: #e4e5ea;
+  --texto: #14151a;
+  --texto-2: #61636e;
+  --codigo-fundo: #1b1d24;
+  --sombra: 0 1px 2px rgb(16 17 22 / 0.05), 0 8px 24px -12px rgb(16 17 22 / 0.14);
+}
+
+.dark {
+  --fundo: #0c0d11;
+  --painel: #14161c;
+  --painel-2: #1a1d25;
+  --borda: #262a34;
+  --texto: #eceef4;
+  --texto-2: #969aa8;
+  --codigo-fundo: #0e1015;
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 28px -14px rgb(0 0 0 / 0.6);
+}
+
+@layer base {
+  * {
+    border-color: var(--borda);
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-fiap-500);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-fiap-500);
+    outline-offset: 2px;
+  }
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+@utility painel {
+  background: var(--painel);
+  border: 1px solid var(--borda);
+  border-radius: 1rem;
+  box-shadow: var(--sombra);
+}
+
+@utility suave {
+  color: var(--texto-2);
+}
+
+/* Barra de rolagem discreta, mesma linguagem nos dois temas. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--borda) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--borda);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* ---- Conteudo das aulas (markdown vindo dos notebooks) ---------------- */
+.aula-md {
+  line-height: 1.75;
+  color: var(--texto);
+}
+.aula-md > * + * {
+  margin-top: 1rem;
+}
+.aula-md h1,
+.aula-md h2,
+.aula-md h3,
+.aula-md h4 {
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  scroll-margin-top: 6rem;
+}
+.aula-md h1 {
+  font-size: 1.75rem;
+  margin-top: 2.5rem;
+}
+.aula-md h2 {
+  font-size: 1.4rem;
+  margin-top: 2.25rem;
+}
+.aula-md h3 {
+  font-size: 1.15rem;
+  margin-top: 1.75rem;
+}
+.aula-md h4 {
+  font-size: 1rem;
+  margin-top: 1.5rem;
+}
+.aula-md h1:first-child,
+.aula-md h2:first-child,
+.aula-md h3:first-child {
+  margin-top: 0;
+}
+.aula-md p {
+  color: var(--texto);
+}
+.aula-md a {
+  color: var(--color-fiap-600);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dark .aula-md a {
+  color: var(--color-fiap-400);
+}
+.aula-md ul,
+.aula-md ol {
+  padding-left: 1.4rem;
+}
+.aula-md ul {
+  list-style: disc;
+}
+.aula-md ol {
+  list-style: decimal;
+}
+.aula-md li + li {
+  margin-top: 0.35rem;
+}
+.aula-md li::marker {
+  color: var(--color-fiap-500);
+}
+.aula-md strong {
+  font-weight: 650;
+}
+.aula-md blockquote {
+  border-left: 3px solid var(--color-fiap-500);
+  padding: 0.25rem 0 0.25rem 1rem;
+  color: var(--texto-2);
+  font-style: italic;
+}
+.aula-md code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--painel-2);
+  border: 1px solid var(--borda);
+  border-radius: 0.375rem;
+  padding: 0.1em 0.35em;
+}
+.aula-md pre {
+  background: var(--codigo-fundo);
+  color: #e6e8f0;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+}
+.aula-md pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.85rem;
+}
+.aula-md img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+}
+.aula-md table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  display: block;
+  overflow-x: auto;
+}
+.aula-md th,
+.aula-md td {
+  border: 1px solid var(--borda);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.aula-md th {
+  background: var(--painel-2);
+  font-weight: 600;
+}
+.aula-md hr {
+  border-top: 1px solid var(--borda);
+}
+
+/* Tabelas que o pandas cospe como HTML no output das celulas. */
+.saida-html table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+.saida-html th,
+.saida-html td {
+  border: 1px solid var(--borda);
+  padding: 0.3rem 0.6rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.saida-html thead th {
+  background: var(--painel-2);
+  position: sticky;
+  top: 0;
+}
+.saida-html style {
+  display: none;
+}
+
+/* ---- highlight.js: uma paleta so, funciona nos dois temas ------------- */
+.hljs-comment,
+.hljs-quote {
+  color: #7b8397;
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type {
+  color: #ff7ab2;
+}
+.hljs-string,
+.hljs-meta-string {
+  color: #a7e08a;
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: #f7c86a;
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-section {
+  color: #7fd4ff;
+}
+.hljs-params {
+  color: #d8dcea;
+}
+.hljs-built_in,
+.hljs-attr,
+.hljs-variable {
+  color: #c9a6ff;
+}
+.hljs-meta {
+  color: #8c93a8;
+}
+
+@keyframes surge {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.surge {
+  animation: surge 0.28s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

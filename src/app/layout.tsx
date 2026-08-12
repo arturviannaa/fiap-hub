@@ -1,0 +1,32 @@
+import type { Metadata, Viewport } from 'next'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: { default: 'Turma FIAP · Plataforma de Estudos', template: '%s · Turma FIAP' },
+  description: 'Plataforma de estudos da turma: aulas, anotações, materiais e chat.',
+  robots: { index: false, follow: false },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f7f9' },
+    { media: '(prefers-color-scheme: dark)', color: '#0c0d11' },
+  ],
+}
+
+// Aplica o tema antes da primeira pintura: sem isso a tela pisca branco para
+// quem usa escuro.
+const TEMA = `try{var t=localStorage.getItem('tema')||'sistema';
+if(t==='escuro'||(t==='sistema'&&matchMedia('(prefers-color-scheme: dark)').matches))
+document.documentElement.classList.add('dark')}catch(e){}`
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: TEMA }} />
+      </head>
+      <body>{children}</body>
+    </html>
+  )
+}
