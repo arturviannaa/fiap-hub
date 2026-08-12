@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Trophy } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { todasAulas } from '@/lib/conteudo'
+import { todasAulas, totalAulasGlobais } from '@/lib/conteudo'
 import { Cabecalho } from '@/components/cabecalho'
 import { EditorPapel } from '@/components/editor-papel'
 import { FormAviso } from '@/components/form-aviso'
@@ -14,7 +14,7 @@ export const metadata = { title: 'Turma' }
 
 export default async function Turma() {
   const u = await usuarioAtual()
-  const total = todasAulas().length
+  const total = totalAulasGlobais()
 
   // Ranking simples de conclusao: motiva sem expor nota de ninguem.
   const membros = await sql<{

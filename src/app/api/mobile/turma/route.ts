@@ -1,5 +1,5 @@
 import { sql } from '@/lib/db'
-import { todasAulas } from '@/lib/conteudo'
+import { todasAulas , totalAulasGlobais } from '@/lib/conteudo'
 import { naoAutorizado, usuarioDoToken } from '@/lib/mobile-auth'
 
 // A turma: mesma listagem do site (progresso, tags, presença).
@@ -22,5 +22,5 @@ export async function GET(req: Request) {
      ORDER BY (SELECT count(*) FROM progresso p WHERE p.usuario_id = u.id) DESC, u.nome`,
   )
 
-  return Response.json({ total: todasAulas().length, euId: u.id, membros })
+  return Response.json({ total: totalAulasGlobais(), euId: u.id, membros })
 }

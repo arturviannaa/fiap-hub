@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, BookOpen, Files, MessageSquare, NotebookPen, Pencil } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { um } from '@/lib/db'
-import { todasAulas } from '@/lib/conteudo'
+import { todasAulas, totalAulasGlobais } from '@/lib/conteudo'
 import { Avatar, BotaoLink, TagsPapel } from '@/components/ui'
 import { PresencaProvider, StatusPresenca } from '@/components/presenca-live'
 
@@ -42,7 +42,7 @@ export default async function PerfilPublico({ params }: { params: Promise<{ id: 
   )
   if (!p) notFound()
 
-  const total = todasAulas().length
+  const total = totalAulasGlobais()
   const ehVoce = p.id === eu.id
 
   const stats = [

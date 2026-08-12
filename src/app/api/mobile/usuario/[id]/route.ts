@@ -1,5 +1,5 @@
 import { um } from '@/lib/db'
-import { todasAulas } from '@/lib/conteudo'
+import { todasAulas , totalAulasGlobais } from '@/lib/conteudo'
 import { naoAutorizado, usuarioDoToken } from '@/lib/mobile-auth'
 
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -17,5 +17,5 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     [id],
   )
   if (!p) return Response.json({ erro: 'não encontrado' }, { status: 404 })
-  return Response.json({ ...p, total: todasAulas().length, ehVoce: p.id === eu.id, souAdmin: eu.papeis.includes('admin') })
+  return Response.json({ ...p, total: totalAulasGlobais(), ehVoce: p.id === eu.id, souAdmin: eu.papeis.includes('admin') })
 }
