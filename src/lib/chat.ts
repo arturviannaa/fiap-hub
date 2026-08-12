@@ -2,14 +2,30 @@ import { EventEmitter } from 'node:events'
 import { Client } from 'pg'
 import { um, sql } from './db'
 
-export const CANAIS = [
+// Canais fixos são por-disciplina: o nome real é `<disc>:<base>` (ex.: python:geral).
+// Grupos (g:<id>) são compartilhados entre disciplinas.
+const CANAIS_BASE = [
   { slug: 'geral', nome: 'geral', descricao: 'Assunto livre da turma' },
   { slug: 'duvidas', nome: 'dúvidas', descricao: 'Travou num exercício? Pergunta aqui' },
   { slug: 'materiais', nome: 'materiais', descricao: 'Links, resumos e indicações' },
   { slug: 'provas', nome: 'provas', descricao: 'Combinados de estudo e datas' },
 ] as const
 
-export const canalFixo = (slug: string) => CANAIS.some((c) => c.slug === slug)
+const BASES: Set<string> = new Set(CANAIS_BASE.map((c) => c.slug))
+
+// Canais fixos de uma disciplina (o que o cliente lista/usa).
+export function canaisDaDisciplina(disc: string) {
+  return CANAIS_BASE.map((c) => ({ slug: `${disc}:${c.slug}`, nome: c.nome, descricao: c.descricao }))
+}
+
+// `<disc>:<base>` é canal fixo válido; `g:<id>` é grupo; resto é inválido.
+export const canalFixo = (canal: string) => {
+  const i = canal.indexOf(':')
+  if (i < 1) return false
+  const disc = canal.slice(0, i)
+  const base = canal.slice(i + 1)
+  return disc !== 'g' && BASES.has(base)
+}
 
 // Canal de grupo privado: 'g:<id>'.
 export const grupoDoCanal = (canal: string) => {

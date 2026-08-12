@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Clock, Code2, ExternalLink, FolderGit2, ListTree } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { sql, um } from '@/lib/db'
-import { acharAula, conteudo, vizinhas } from '@/lib/conteudo'
+import { acharAula, conteudo, disciplinaDaAula, vizinhas } from '@/lib/conteudo'
 import { BlocoCodigo } from '@/components/bloco-codigo'
 import { MarcarAula } from '@/components/marcar-aula'
 import { NotasDaAula } from '@/components/notas-aula'
@@ -55,7 +55,7 @@ export default async function PaginaAula({ params }: { params: Promise<{ slug: s
 
   const { anterior, proxima } = vizinhas(slug)
   const toc = indice(aula.blocos.filter((b) => b.tipo === 'md').map((b: any) => b.html))
-  const fonte = conteudo().disciplina.fonte
+  const fonte = conteudo(disciplinaDaAula(slug)).disciplina.fonte
 
   let nCodigo = 0
 
@@ -97,7 +97,7 @@ export default async function PaginaAula({ params }: { params: Promise<{ slug: s
             rel="noreferrer"
             className="inline-flex items-center gap-1 hover:text-fiap-500"
           >
-            <FolderGit2 size={13} /> notebook original <ExternalLink size={11} />
+            <FolderGit2 size={13} /> ver no GitHub <ExternalLink size={11} />
           </a>
         </div>
 

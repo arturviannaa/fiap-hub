@@ -3,6 +3,8 @@ import { Globe, Lock, NotebookPen, Trash2 } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { acharAula } from '@/lib/conteudo'
+import { discAtiva } from '@/lib/disciplina'
+import { redirect } from 'next/navigation'
 import { apagarNota, salvarNota } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
 import { Area, Avatar, Botao, Campo, Selo, Vazio, quando } from '@/components/ui'
@@ -62,15 +64,17 @@ function Cartao({ n, meu }: { n: Nota; meu: boolean }) {
 
 export default async function Anotacoes({ searchParams }: { searchParams: Promise<{ aba?: string }> }) {
   const u = await usuarioAtual()
+  const disc = await discAtiva()
+  if (!disc) redirect('/disciplinas')
   const aba = (await searchParams).aba === 'turma' ? 'turma' : 'minhas'
 
   const notas = await sql<Nota>(
     aba === 'turma'
       ? `SELECT n.*, u.nome AS autor, u.foto AS autor_foto FROM notas n JOIN usuarios u ON u.id = n.usuario_id
-         WHERE n.publica ORDER BY n.atualizado_em DESC LIMIT 200`
+         WHERE n.publica AND n.disciplina = $1 ORDER BY n.atualizado_em DESC LIMIT 200`
       : `SELECT n.*, u.nome AS autor, u.foto AS autor_foto FROM notas n JOIN usuarios u ON u.id = n.usuario_id
-         WHERE n.usuario_id = $1 ORDER BY n.atualizado_em DESC LIMIT 200`,
-    aba === 'turma' ? [] : [u.id],
+         WHERE n.usuario_id = $1 AND n.disciplina = $2 ORDER BY n.atualizado_em DESC LIMIT 200`,
+    aba === 'turma' ? [disc] : [u.id, disc],
   )
 
   return (

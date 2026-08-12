@@ -1,5 +1,6 @@
 import {
   Boxes,
+  Cpu,
   Dumbbell,
   FileText,
   FunctionSquare,
@@ -21,6 +22,7 @@ const MAPA: Record<string, any> = {
   package: Package,
   dumbbell: Dumbbell,
   sparkles: Sparkles,
+  cpu: Cpu,
 }
 
 export function IconeModulo({ nome, size = 20 }: { nome: string; size?: number }) {

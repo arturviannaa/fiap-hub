@@ -5,11 +5,15 @@ import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { sql, um } from './db'
 import { usuarioAtual } from './auth'
 import { canalPermitido } from './chat'
 import { COOLDOWN_CHAT_MS, esperaRestante, limparTexto, marcarAcao, permitido } from './limites'
 import { PAPEIS, type Papel } from './papeis'
+import { COOKIE_DISC } from './disciplina'
+import { ehDisciplina } from './conteudo'
+import { discOuPadrao } from './disciplina'
 import { enviarPush, pushMensagemGrupo, pushTodos } from './push'
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads')
@@ -51,12 +55,9 @@ export async function salvarNota(dados: FormData) {
       [titulo, corpo, publica, id, u.id],
     )
   } else {
-    await sql('INSERT INTO notas (usuario_id, aula_slug, titulo, corpo, publica) VALUES ($1,$2,$3,$4,$5)', [
-      u.id,
-      aula,
-      titulo,
-      corpo,
-      publica,
+    const disc = await discOuPadrao()
+    await sql('INSERT INTO notas (usuario_id, aula_slug, titulo, corpo, publica, disciplina) VALUES ($1,$2,$3,$4,$5,$6)', [
+      u.id, aula, titulo, corpo, publica, disc,
     ])
   }
   revalidatePath('/anotacoes')
@@ -83,9 +84,10 @@ export async function enviarArquivo(dados: FormData) {
   await mkdir(UPLOAD_DIR, { recursive: true })
   await writeFile(join(UPLOAD_DIR, armazenado), Buffer.from(await arquivo.arrayBuffer()))
 
+  const disc = await discOuPadrao()
   await sql(
-    `INSERT INTO arquivos (usuario_id, aula_slug, nome, armazenado, mime, tamanho, descricao, publico)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+    `INSERT INTO arquivos (usuario_id, aula_slug, nome, armazenado, mime, tamanho, descricao, publico, disciplina)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
     [
       u.id,
       String(dados.get('aula') || '') || null,
@@ -95,6 +97,7 @@ export async function enviarArquivo(dados: FormData) {
       arquivo.size,
       String(dados.get('descricao') || '').slice(0, 500),
       dados.get('publico') !== 'privado',
+      disc,
     ],
   )
   revalidatePath('/arquivos')
@@ -367,4 +370,11 @@ export async function salvarPerfil(dados: FormData) {
   ])
   revalidatePath('/perfil')
   revalidatePath('/', 'layout')
+}
+
+// Escolhe/troca a disciplina ativa (cookie de 1 ano).
+export async function escolherDisciplina(slug: string) {
+  if (!ehDisciplina(slug)) return
+  ;(await cookies()).set(COOKIE_DISC, slug, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+  redirect('/')
 }

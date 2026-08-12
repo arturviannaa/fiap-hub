@@ -3,6 +3,8 @@ import { Check, Clock, Code2 } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { conteudo, ehNova } from '@/lib/conteudo'
+import { discAtiva } from '@/lib/disciplina'
+import { redirect } from 'next/navigation'
 import { Cabecalho } from '@/components/cabecalho'
 import { IconeModulo } from '@/components/icone-modulo'
 import { Selo } from '@/components/ui'
@@ -12,7 +14,9 @@ export const metadata = { title: 'Aulas' }
 
 export default async function Aulas() {
   const u = await usuarioAtual()
-  const dados = conteudo()
+  const disc = await discAtiva()
+  if (!disc) redirect('/disciplinas')
+  const dados = conteudo(disc)
   const feitas = await sql<{ aula_slug: string }>('SELECT aula_slug FROM progresso WHERE usuario_id = $1', [u.id])
   const concluidas = new Set(feitas.map((f) => f.aula_slug))
 

@@ -1,6 +1,6 @@
 import { sql } from '@/lib/db'
 import { naoAutorizado, usuarioDoToken } from '@/lib/mobile-auth'
-import { CANAIS, SELECT_MENSAGEM, canalPermitido, gruposDoUsuario, type MensagemChat } from '@/lib/chat'
+import { canaisDaDisciplina, SELECT_MENSAGEM, canalPermitido, gruposDoUsuario, type MensagemChat } from '@/lib/chat'
 import { COOLDOWN_CHAT_MS, esperaRestante, limparTexto, marcarAcao } from '@/lib/limites'
 import { pushMensagemGrupo } from '@/lib/push'
 
@@ -11,7 +11,9 @@ export async function GET(req: Request) {
   const u = await usuarioDoToken(req)
   if (!u) return naoAutorizado()
 
-  const canal = new URL(req.url).searchParams.get('canal') || 'geral'
+  const params = new URL(req.url).searchParams
+  const disc = params.get('disciplina') || 'python'
+  const canal = params.get('canal') || `${disc}:geral`
   if (!(await canalPermitido(canal, u.id))) return Response.json({ erro: 'sem acesso' }, { status: 403 })
 
   const [mensagens, grupos] = await Promise.all([
@@ -20,7 +22,7 @@ export async function GET(req: Request) {
   ])
 
   return Response.json({
-    canais: CANAIS,
+    canais: canaisDaDisciplina(disc),
     grupos,
     mensagens: mensagens.reverse(),
     eu: { id: u.id, nome: u.nome, papeis: u.papeis },

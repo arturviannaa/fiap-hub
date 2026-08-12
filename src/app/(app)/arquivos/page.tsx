@@ -3,6 +3,8 @@ import { Download, FileText, Globe, Lock, Trash2, Upload } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { acharAula, todasAulas } from '@/lib/conteudo'
+import { discAtiva } from '@/lib/disciplina'
+import { redirect } from 'next/navigation'
 import { apagarArquivo } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
 import { FormUpload } from '@/components/form-upload'
@@ -26,15 +28,17 @@ type Arquivo = {
 
 export default async function Arquivos({ searchParams }: { searchParams: Promise<{ aba?: string }> }) {
   const u = await usuarioAtual()
+  const disc = await discAtiva()
+  if (!disc) redirect('/disciplinas')
   const aba = (await searchParams).aba === 'meus' ? 'meus' : 'turma'
 
   const arquivos = await sql<Arquivo>(
     aba === 'meus'
       ? `SELECT a.*, u.nome AS autor FROM arquivos a JOIN usuarios u ON u.id = a.usuario_id
-         WHERE a.usuario_id = $1 ORDER BY a.id DESC`
+         WHERE a.usuario_id = $1 AND a.disciplina = $2 AND a.descricao <> 'anexo do chat' ORDER BY a.id DESC`
       : `SELECT a.*, u.nome AS autor FROM arquivos a JOIN usuarios u ON u.id = a.usuario_id
-         WHERE a.publico ORDER BY a.id DESC`,
-    aba === 'meus' ? [u.id] : [],
+         WHERE a.publico AND a.disciplina = $1 AND a.descricao <> 'anexo do chat' ORDER BY a.id DESC`,
+    aba === 'meus' ? [u.id, disc] : [disc],
   )
 
   return (
@@ -49,7 +53,7 @@ export default async function Arquivos({ searchParams }: { searchParams: Promise
           <h2 className="flex items-center gap-2 font-semibold">
             <Upload size={17} className="text-fiap-500" /> Enviar material
           </h2>
-          <FormUpload aulas={todasAulas().map((a) => ({ slug: a.slug, titulo: a.titulo }))} />
+          <FormUpload aulas={todasAulas(disc).map((a) => ({ slug: a.slug, titulo: a.titulo }))} />
         </div>
 
         <div>
