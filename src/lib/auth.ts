@@ -1,6 +1,5 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
 import bcrypt from 'bcryptjs'
 import { sql, um } from './db'
 
@@ -13,7 +12,7 @@ export type Usuario = {
 }
 
 // Dominios institucionais aceitos. A plataforma e da turma, entao email de fora
-// simplesmente nao entra — vale para os dois provedores.
+// simplesmente nao entra.
 const DOMINIOS = (process.env.ALLOWED_EMAIL_DOMAINS || 'fiap.com.br,alunos.fiap.com.br')
   .split(',')
   .map((d) => d.trim().toLowerCase())
@@ -25,10 +24,6 @@ export function dominioPermitido(email: string) {
 }
 
 export const dominiosTexto = DOMINIOS.map((d) => '@' + d).join(' ou ')
-
-export const microsoftAtivo = !!(
-  process.env.AUTH_MICROSOFT_ENTRA_ID_ID && process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET
-)
 
 function nomeDoEmail(email: string) {
   return email
@@ -77,34 +72,12 @@ const provedores = [
   }),
 ]
 
-if (microsoftAtivo) {
-  provedores.unshift(
-    MicrosoftEntraID({
-      clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID!,
-      clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET!,
-      issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
-      authorization: { params: { scope: 'openid profile email User.Read' } },
-    }) as any,
-  )
-}
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: provedores,
   session: { strategy: 'jwt', maxAge: 60 * 60 * 24 * 30 },
   pages: { signIn: '/entrar', error: '/entrar' },
   trustHost: true,
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider !== 'microsoft-entra-id') return true
-      const email = (user.email || (user as any).preferred_username || '').toLowerCase()
-      if (!email || !dominioPermitido(email)) return '/entrar?erro=dominio'
-      const conta = await acharOuCriar(email, user.name || '', 'microsoft')
-      if (conta) {
-        user.id = String(conta.id)
-        ;(user as any).papel = conta.papel
-      }
-      return true
-    },
     async jwt({ token, user }) {
       if (user) {
         token.uid = Number(user.id)
