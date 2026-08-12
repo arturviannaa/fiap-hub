@@ -5,6 +5,7 @@ import { sql } from '@/lib/db'
 import { todasAulas } from '@/lib/conteudo'
 import { Cabecalho } from '@/components/cabecalho'
 import { EditorPapel } from '@/components/editor-papel'
+import { FormAviso } from '@/components/form-aviso'
 import { PresencaProvider, StatusPresenca } from '@/components/presenca-live'
 import { Avatar, Selo, TagsPapel, quando } from '@/components/ui'
 
@@ -45,6 +46,12 @@ export default async function Turma() {
             : `${membros.length} pessoas estudando por aqui.`
         }
       />
+
+      {u.papeis.includes('admin') && (
+        <div className="mb-4">
+          <FormAviso />
+        </div>
+      )}
 
       <PresencaProvider>
       <ul className="grid gap-3 sm:grid-cols-2">

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { ipDe, permitido } from '@/lib/limites'
 
 // /api/mobile valida por Bearer token na própria rota, não por cookie.
-const PUBLICAS = ['/entrar', '/cadastro', '/api/auth', '/api/mobile', '/api/app', '/api/saude', '/conteudo', '/favicon.svg', '/manifest', '/icon']
+const PUBLICAS = ['/entrar', '/cadastro', '/api/auth', '/api/mobile', '/api/app', '/api/interno', '/api/saude', '/conteudo', '/favicon.svg', '/manifest', '/icon']
 
 // Teto por IP. IMPORTANTE: a turma toda pode estar atrás de um único NAT (WiFi
 // da faculdade) — todos com o mesmo IP público. Então os limites por IP são um

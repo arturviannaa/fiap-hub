@@ -289,6 +289,44 @@ const saida = {
   modulos,
 }
 
+// Slugs anteriores (se ja existia um python.json) — pra detectar aula nova.
+let slugsAntigos = new Set()
+const arquivoSaida = join(OUT, 'python.json')
+if (existsSync(arquivoSaida)) {
+  try {
+    const antigo = JSON.parse(readFileSync(arquivoSaida, 'utf8'))
+    slugsAntigos = new Set(antigo.modulos.flatMap((m) => m.aulas.map((a) => a.slug)))
+  } catch {}
+}
+
 mkdirSync(OUT, { recursive: true })
-writeFileSync(join(OUT, 'python.json'), JSON.stringify(saida))
-console.log(`conteudo: ${modulos.length} modulos, ${totalAulas} aulas -> ${join(OUT, 'python.json')}`)
+writeFileSync(arquivoSaida, JSON.stringify(saida))
+console.log(`conteudo: ${modulos.length} modulos, ${totalAulas} aulas -> ${arquivoSaida}`)
+
+// Push de "aula nova": so quando ja havia um conteudo anterior (evita disparar
+// pra todas as 22 na primeira geracao) e so pras aulas realmente novas.
+const APP = process.env.APP_INTERNO_URL
+const SEGREDO = process.env.INTERNO_SECRET
+if (APP && SEGREDO && slugsAntigos.size > 0) {
+  const novasAulas = saida.modulos
+    .flatMap((m) => m.aulas)
+    .filter((a) => !slugsAntigos.has(a.slug))
+    .slice(0, 5) // no maximo 5 avisos por ciclo
+  for (const a of novasAulas) {
+    try {
+      await fetch(`${APP}/api/interno/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          secret: SEGREDO,
+          titulo: `Nova aula: ${a.titulo}`,
+          corpo: a.moduloTitulo,
+          data: { slug: a.slug },
+        }),
+      })
+      console.log(`  push enviado: aula nova ${a.slug}`)
+    } catch (e) {
+      console.warn(`  push falhou (${a.slug}): ${e.message}`)
+    }
+  }
+}

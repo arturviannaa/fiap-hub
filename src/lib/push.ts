@@ -52,3 +52,32 @@ export async function enviarPush(
     if (mortos.length) await sql('DELETE FROM push_tokens WHERE token = ANY($1::text[])', [mortos])
   }
 }
+
+// Push pra turma inteira.
+export async function pushTodos(titulo: string, corpo: string, data?: Record<string, string>) {
+  const todos = await sql<{ id: number }>('SELECT id FROM usuarios')
+  await enviarPush(todos.map((t) => t.id), { titulo, corpo, data })
+}
+
+// Push de mensagem nova num grupo, só pros membros que estão OFFLINE (evita
+// spammar quem já está com o chat aberto). O remetente nunca recebe.
+export async function pushMensagemGrupo(canal: string, remetenteId: number, remetenteNome: string, corpo: string) {
+  const m = /^g:(\d+)$/.exec(canal)
+  if (!m) return
+  const grupoId = Number(m[1])
+  const [alvos, g] = await Promise.all([
+    sql<{ usuario_id: number }>(
+      `SELECT gm.usuario_id FROM grupo_membros gm JOIN usuarios u ON u.id = gm.usuario_id
+       WHERE gm.grupo_id = $1 AND gm.usuario_id <> $2 AND u.visto_em < now() - interval '2 minutes'`,
+      [grupoId, remetenteId],
+    ),
+    sql<{ nome: string }>('SELECT nome FROM grupos WHERE id = $1', [grupoId]),
+  ])
+  if (!alvos.length) return
+  const texto = corpo.trim() || 'enviou um anexo'
+  await enviarPush(alvos.map((a) => a.usuario_id), {
+    titulo: g[0]?.nome || 'Grupo',
+    corpo: `${remetenteNome.split(' ')[0]}: ${texto.slice(0, 90)}`,
+    data: { canal },
+  })
+}

@@ -38,6 +38,7 @@ services:
       CONTENT_DIR: /app/content
       UPLOAD_DIR: /app/uploads
       FIREBASE_CRED_PATH: /app/secrets/firebase.json
+      INTERNO_SECRET: ${INTERNO_SECRET:-}
     volumes:
       # rw porque o entrypoint semeia o conteudo inicial num volume vazio
       - conteudo:/app/content
@@ -56,6 +57,8 @@ services:
       TZ: America/Sao_Paulo
       REPO_CONTEUDO: ${REPO_CONTEUDO:-https://github.com/mariacmartins/computational_thinking_with_python}
       INTERVALO_SYNC: ${INTERVALO_SYNC:-1800}
+      INTERNO_SECRET: ${INTERNO_SECRET:-}
+      APP_INTERNO_URL: http://app:3000
     volumes:
       - conteudo:/app/content
       - repo-disciplina:/app/repo
