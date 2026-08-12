@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: { default: 'Turma FIAP · Plataforma de Estudos', template: '%s · Turma FIAP' },
   description: 'Plataforma de estudos da turma: aulas, anotações, materiais e chat.',
   robots: { index: false, follow: false },
+  icons: { icon: '/favicon.svg' },
 }
 
 export const viewport: Viewport = {
