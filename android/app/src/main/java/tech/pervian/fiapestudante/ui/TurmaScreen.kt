@@ -1,6 +1,7 @@
 package tech.pervian.fiapestudante.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,7 +21,7 @@ import tech.pervian.fiapestudante.data.RespTurma
 import tech.pervian.fiapestudante.data.Sessao
 
 @Composable
-fun TurmaScreen(api: Api, sessao: Sessao) {
+fun TurmaScreen(api: Api, sessao: Sessao, onAbrirPerfil: (Int) -> Unit = {}) {
     var dados by remember { mutableStateOf<RespTurma?>(null) }
     LaunchedEffect(Unit) { dados = try { api.turma() } catch (e: Exception) { null } }
 
@@ -35,7 +36,7 @@ fun TurmaScreen(api: Api, sessao: Sessao) {
         items(d.membros) { m ->
             val pct = if (d.total > 0) m.aulas * 100 / d.total else 0
             val on = online(m.visto_em)
-            Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+            Card(Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onAbrirPerfil(m.id) }) {
                 Row(Modifier.padding(14.dp)) {
                     Avatar(m.nome, m.id, m.foto, sessao.token, 44)
                     Spacer(Modifier.width(12.dp))

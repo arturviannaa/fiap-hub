@@ -102,6 +102,40 @@ class Api(private val sessao: Sessao) {
     suspend fun turma(): RespTurma = get("/api/mobile/turma")
     suspend fun me(): RespMe = get("/api/mobile/me")
 
+    suspend fun apagarMensagem(id: Int): Unit = withContext(Dispatchers.IO) {
+        val body = JSON.encodeToString(mapOf("id" to id)).toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/chat/apagar").post(body).build()).execute().close()
+    }
+
+    suspend fun usuario(id: Int): PerfilUsuario = get("/api/mobile/usuario/$id")
+
+    suspend fun adminPapel(usuarioId: Int, papel: String): RespAdmin =
+        post("/api/mobile/admin", JSON.encodeToString(mapOf("acao" to "papel", "usuarioId" to usuarioId.toString(), "papel" to papel)))
+
+    suspend fun adminNome(usuarioId: Int, nome: String): RespAdmin =
+        post("/api/mobile/admin", JSON.encodeToString(mapOf("acao" to "nome", "usuarioId" to usuarioId.toString(), "nome" to nome)))
+
+    suspend fun grupos(): RespGrupos = get("/api/mobile/grupos")
+
+    suspend fun criarGrupo(nome: String, descricao: String, membros: List<Int>): RespCriarGrupo = withContext(Dispatchers.IO) {
+        val payload = JSON.encodeToString(NovoGrupo(nome, descricao, membros))
+        val body = payload.toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/grupos").post(body).build()).execute().use { r ->
+            JSON.decodeFromString(r.body?.string() ?: "{}")
+        }
+    }
+
+    suspend fun sairGrupo(grupoId: Int): Unit = withContext(Dispatchers.IO) {
+        val body = JSON.encodeToString(mapOf("grupoId" to grupoId)).toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/grupos/sair").post(body).build()).execute().close()
+    }
+
+    suspend fun notificacoes(): RespNotif = get("/api/mobile/notificacoes")
+
+    suspend fun marcarNotifVisto(): Unit = withContext(Dispatchers.IO) {
+        runCatching { cliente.newCall(req("/api/mobile/notificacoes/visto").post("".toRequestBody()).build()).execute().close() }
+    }
+
     suspend fun heartbeat(): Unit = withContext(Dispatchers.IO) {
         runCatching {
             cliente.newCall(req("/api/mobile/presenca").post("".toRequestBody()).build()).execute().close()

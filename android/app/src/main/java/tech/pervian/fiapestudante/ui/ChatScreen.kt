@@ -1,7 +1,11 @@
 package tech.pervian.fiapestudante.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,12 +24,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.DeleteOutline
 import kotlinx.coroutines.launch
 import tech.pervian.fiapestudante.data.*
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ChatScreen(api: Api, sessao: Sessao) {
-    var canal by remember { mutableStateOf("geral") }
+fun ChatScreen(api: Api, sessao: Sessao, canalInicial: String = "geral", onAbrirPerfil: (Int) -> Unit = {}) {
+    var canal by remember { mutableStateOf(canalInicial) }
     var dados by remember { mutableStateOf<RespChat?>(null) }
     val mensagens = remember { mutableStateListOf<Mensagem>() }
     var texto by remember { mutableStateOf("") }
@@ -33,6 +39,8 @@ fun ChatScreen(api: Api, sessao: Sessao) {
     val lista = rememberLazyListState()
     val stream = remember { ChatStream(api, sessao) }
     val euId = sessao.usuario?.id ?: -1
+    val souAdmin = sessao.usuario?.papeis?.contains("admin") == true
+    var apagar by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(canal) {
         dados = try { api.chat(canal) } catch (e: Exception) { null }
@@ -77,12 +85,23 @@ fun ChatScreen(api: Api, sessao: Sessao) {
             items(mensagens.size) { i ->
                 val m = mensagens[i]
                 val meu = m.usuario_id == euId
-                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                    Avatar(m.nome, m.usuario_id, m.foto, sessao.token, 34)
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 4.dp).combinedClickable(
+                        onClick = {},
+                        onLongClick = { if (meu || souAdmin) apagar = m.id },
+                    ),
+                ) {
+                    Box(Modifier.clickable { onAbrirPerfil(m.usuario_id) }) {
+                        Avatar(m.nome, m.usuario_id, m.foto, sessao.token, 34)
+                    }
                     Spacer(Modifier.width(10.dp))
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(if (meu) "Você" else m.nome, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text(
+                            if (meu) "Você" else m.nome,
+                            fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+                            modifier = Modifier.clickable { onAbrirPerfil(m.usuario_id) },
+                        )
                             Spacer(Modifier.width(6.dp))
                             Tags(m.papeis, mudo = true)
                             Text(hora(m.criado_em), color = Color.Gray, fontSize = 11.sp)
@@ -96,7 +115,7 @@ fun ChatScreen(api: Api, sessao: Sessao) {
             }
         }
 
-        Surface(shadowElevation = 8.dp) {
+        Surface(shadowElevation = 8.dp, modifier = Modifier.imePadding().navigationBarsPadding()) {
             Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = texto, onValueChange = { texto = it.take(1200) },
@@ -112,6 +131,22 @@ fun ChatScreen(api: Api, sessao: Sessao) {
                 ) { Icon(Icons.AutoMirrored.Filled.Send, "Enviar", tint = Color.White) }
             }
         }
+    }
+
+    apagar?.let { id ->
+        AlertDialog(
+            onDismissRequest = { apagar = null },
+            confirmButton = {
+                TextButton(onClick = {
+                    escopo.launch { runCatching { api.apagarMensagem(id) } }
+                    apagar = null
+                }) { Text("Apagar", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = { TextButton(onClick = { apagar = null }) { Text("Cancelar") } },
+            icon = { Icon(Icons.Filled.DeleteOutline, null, tint = Color(0xFFEF4444)) },
+            title = { Text("Apagar mensagem?") },
+            text = { Text("Essa ação não pode ser desfeita.") },
+        )
     }
 }
 
