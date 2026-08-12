@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Avatar } from './ui'
 import { Presenca } from './presenca'
+import { sair } from '@/lib/acoes-auth'
 
 const LINKS = [
   { href: '/', rotulo: 'Painel', Icone: LayoutDashboard },
@@ -149,14 +150,16 @@ export function Shell({
           </Link>
           <div className="flex-1" />
           <TemaBotao />
-          <a
-            href="/api/auth/signout"
-            className="grid h-9 w-9 place-items-center rounded-xl border hover:bg-[var(--painel-2)]"
-            aria-label="Sair"
-            title="Sair"
-          >
-            <LogOut size={17} />
-          </a>
+          <form action={sair}>
+            <button
+              type="submit"
+              className="grid h-9 w-9 place-items-center rounded-xl border hover:bg-[var(--painel-2)]"
+              aria-label="Sair"
+              title="Sair"
+            >
+              <LogOut size={17} />
+            </button>
+          </form>
         </header>
         <main className="min-w-0 flex-1 px-3 py-5 sm:px-6 sm:py-7">{children}</main>
       </div>

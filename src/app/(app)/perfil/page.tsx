@@ -5,6 +5,7 @@ import { todasAulas } from '@/lib/conteudo'
 import { salvarPerfil } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
 import { FotoPerfil } from '@/components/foto-perfil'
+import { sair } from '@/lib/acoes-auth'
 import { Area, Botao, Campo, TagsPapel } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
@@ -42,12 +43,14 @@ export default async function Perfil() {
           <p className="truncate text-sm suave">{u.email}</p>
         </div>
         <div className="flex-1" />
-        <a
-          href="/api/auth/signout"
-          className="inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm hover:bg-[var(--painel-2)]"
-        >
-          <LogOut size={15} /> Sair
-        </a>
+        <form action={sair}>
+          <button
+            type="submit"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm hover:bg-[var(--painel-2)]"
+          >
+            <LogOut size={15} /> Sair
+          </button>
+        </form>
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
