@@ -6,13 +6,27 @@ CREATE TABLE IF NOT EXISTS usuarios (
   nome          TEXT NOT NULL,
   senha_hash    TEXT,                       -- nulo quando o login e via Microsoft
   provedor      TEXT NOT NULL DEFAULT 'senha',
-  papel         TEXT NOT NULL DEFAULT 'aluno',  -- aluno | admin
+  papeis        TEXT[] NOT NULL DEFAULT '{aluno}',  -- pode ter várias: aluno, professor, admin
   bio           TEXT NOT NULL DEFAULT '',
   criado_em     TIMESTAMPTZ NOT NULL DEFAULT now(),
   visto_em      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 -- Foto de perfil: nome do arquivo no disco (UPLOAD_DIR), nulo = usa as iniciais.
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto TEXT;
+
+-- Migração do papel único (coluna antiga `papel`) para o array `papeis`. Todo
+-- mundo mantém 'aluno' como base; quem era admin/professor ganha a tag extra.
+-- Roda uma vez: depois `papel` não existe mais e o bloco é pulado.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS papeis TEXT[] NOT NULL DEFAULT '{aluno}';
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_name = 'usuarios' AND column_name = 'papel') THEN
+    UPDATE usuarios SET papeis =
+      ARRAY(SELECT DISTINCT e FROM unnest(ARRAY['aluno', papel]) AS e WHERE e IS NOT NULL);
+    ALTER TABLE usuarios DROP COLUMN papel;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS progresso (
   usuario_id   INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,

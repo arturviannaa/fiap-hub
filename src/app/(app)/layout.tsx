@@ -7,8 +7,8 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   const sessao = await auth()
   const id = (sessao?.user as any)?.id
   const usuario = id
-    ? await um<{ id: number; nome: string; email: string; papel: string; foto: string | null }>(
-        'SELECT id, nome, email, papel, foto FROM usuarios WHERE id = $1',
+    ? await um<{ id: number; nome: string; email: string; papeis: string[]; foto: string | null }>(
+        'SELECT id, nome, email, papeis, foto FROM usuarios WHERE id = $1',
         [id],
       )
     : null
