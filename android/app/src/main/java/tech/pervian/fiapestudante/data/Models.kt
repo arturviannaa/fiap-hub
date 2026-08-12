@@ -139,3 +139,55 @@ data class Stats(val aulas: String = "0", val notas: String = "0", val arquivos:
 
 @Serializable
 data class RespMe(val usuario: Usuario, val total: Int = 0, val stats: Stats = Stats())
+
+// ---- perfil de outra pessoa ----------------------------------------------
+
+@Serializable
+data class PerfilUsuario(
+    val id: Int,
+    val nome: String,
+    val email: String = "",
+    val bio: String = "",
+    val papeis: List<String> = listOf("aluno"),
+    val foto: String? = null,
+    val criado_em: String = "",
+    val visto_em: String = "",
+    val aulas: Int = 0,
+    val notas: Int = 0,
+    val arquivos: Int = 0,
+    val total: Int = 0,
+    val ehVoce: Boolean = false,
+    val souAdmin: Boolean = false,
+)
+
+@Serializable
+data class RespAdmin(val ok: Boolean = false, val papeis: List<String> = emptyList(), val nome: String = "", val erro: String? = null)
+
+// ---- grupos ---------------------------------------------------------------
+
+@Serializable
+data class PessoaLite(val id: Int, val nome: String, val foto: String? = null)
+
+@Serializable
+data class RespGrupos(val grupos: List<Grupo> = emptyList(), val turma: List<PessoaLite> = emptyList())
+
+@Serializable
+data class RespCriarGrupo(val ok: Boolean = false, val grupoId: Int = 0, val canal: String = "", val erro: String? = null)
+
+// ---- notificações ---------------------------------------------------------
+
+@Serializable
+data class Notificacao(
+    val tipo: String,
+    val titulo: String,
+    val texto: String = "",
+    val quando: String = "",
+    val canal: String? = null,
+    val slug: String? = null,
+)
+
+@Serializable
+data class RespNotif(val notificacoes: List<Notificacao> = emptyList(), val naoLidas: Int = 0)
+
+@Serializable
+data class NovoGrupo(val nome: String, val descricao: String, val membros: List<Int>)

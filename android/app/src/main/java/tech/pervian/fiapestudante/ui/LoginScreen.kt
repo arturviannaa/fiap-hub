@@ -1,6 +1,10 @@
 package tech.pervian.fiapestudante.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -47,10 +51,17 @@ fun LoginScreen(api: Api, sessao: Sessao, aoEntrar: () -> Unit) {
     }
 
     Column(
-        Modifier.fillMaxSize().background(Color(0xFF0C0D11)).padding(28.dp),
+        Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0C0D11))
+            .verticalScroll(rememberScrollState())
+            .systemBarsPadding()
+            .imePadding()
+            .padding(28.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Spacer(Modifier.height(40.dp))
         Box(
             Modifier.size(72.dp).clip(RoundedCornerShape(20.dp)).background(FiapMagenta),
             contentAlignment = Alignment.Center,
