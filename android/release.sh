@@ -27,3 +27,11 @@ scp /tmp/fiap-version.json caixas7-vps:/var/www/fiap-app/version.json
 scp landing/index.html landing/icon.png caixas7-vps:/var/www/fiap-app/
 
 echo "publicado: https://fiap.pervian.tech/app/FIAP-Estudante.apk (v$VN, code $VC)"
+
+# Avisa por push todo mundo que tem o app: saiu versão nova.
+SECRET=$(ssh caixas7-vps "grep '^INTERNO_SECRET=' /opt/fiap-hub/.env | cut -d= -f2-" 2>/dev/null || true)
+if [ -n "$SECRET" ]; then
+  curl -s -o /dev/null -w 'push nova versão: %{http_code}\n' https://fiap.pervian.tech/api/interno/broadcast \
+    -H 'Content-Type: application/json' \
+    -d "{\"secret\":\"$SECRET\",\"titulo\":\"Nova versão disponível 🚀\",\"corpo\":\"Atualize o FIAP Estudante para a v$VN — toque para abrir e atualizar.\"}"
+fi

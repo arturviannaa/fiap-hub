@@ -140,6 +140,17 @@ class Api(private val sessao: Sessao) {
         runCatching { cliente.newCall(req("/api/mobile/notificacoes/limpar").post("".toRequestBody()).build()).execute().close() }
     }
 
+    suspend fun notas(aba: String): RespNotas = get("/api/mobile/notas?aba=$aba")
+    suspend fun criarNota(corpo: String, titulo: String, publica: Boolean): Unit = withContext(Dispatchers.IO) {
+        val body = JSON.encodeToString(NovaNota(corpo, titulo, publica)).toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/notas").post(body).build()).execute().close()
+    }
+    suspend fun apagarNota(id: Int): Unit = withContext(Dispatchers.IO) {
+        val body = JSON.encodeToString(mapOf("id" to id)).toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/notas/apagar").post(body).build()).execute().close()
+    }
+    suspend fun materiais(aba: String): RespMateriais = get("/api/mobile/materiais?aba=$aba")
+
     suspend fun heartbeat(): Unit = withContext(Dispatchers.IO) {
         runCatching {
             cliente.newCall(req("/api/mobile/presenca").post("".toRequestBody()).build()).execute().close()

@@ -191,3 +191,41 @@ data class RespNotif(val notificacoes: List<Notificacao> = emptyList(), val naoL
 
 @Serializable
 data class NovoGrupo(val nome: String, val descricao: String, val membros: List<Int>)
+
+// ---- anotações / materiais ------------------------------------------------
+
+@Serializable
+data class NotaApp(
+    val id: Int,
+    val titulo: String = "",
+    val corpo: String = "",
+    val publica: Boolean = false,
+    val aula_slug: String? = null,
+    val usuario_id: Int,
+    val atualizado_em: String = "",
+    val autor: String = "",
+    val autor_foto: String? = null,
+)
+
+@Serializable
+data class RespNotas(val notas: List<NotaApp> = emptyList(), val euId: Int = 0)
+
+@Serializable
+data class NovaNota(val corpo: String, val titulo: String = "", val publica: Boolean = false)
+
+@Serializable
+data class MaterialApp(
+    val id: Int,
+    val nome: String,
+    val descricao: String = "",
+    val tamanho: Long = 0,
+    val publico: Boolean = true,
+    val aula_slug: String? = null,
+    val usuario_id: Int,
+    val downloads: Int = 0,
+    val criado_em: String = "",
+    val autor: String = "",
+)
+
+@Serializable
+data class RespMateriais(val materiais: List<MaterialApp> = emptyList(), val euId: Int = 0)
