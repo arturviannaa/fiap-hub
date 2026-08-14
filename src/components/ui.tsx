@@ -81,6 +81,31 @@ export function Segmentado({ itens }: { itens: { href: string; rotulo: string; a
   )
 }
 
+// Ícone com fundo colorido arredondado + borda (módulos, arquivos, cartões de
+// estatística). Um componente só pra não repetir a mesma classe em cada tela.
+export function IconeBadge({
+  children,
+  tamanho = 44,
+  tom = 'fiap',
+}: {
+  children: ReactNode
+  tamanho?: number
+  tom?: 'fiap' | 'neutro'
+}) {
+  const tons = {
+    fiap: 'border-fiap-500/20 bg-fiap-500/12 text-fiap-500',
+    neutro: 'border-[var(--borda)] bg-[var(--painel-2)] suave',
+  }
+  return (
+    <span
+      className={`grid shrink-0 place-items-center rounded-2xl border ${tons[tom]}`}
+      style={{ width: tamanho, height: tamanho }}
+    >
+      {children}
+    </span>
+  )
+}
+
 export function Selo({ children, tom = 'neutro' }: { children: ReactNode; tom?: 'neutro' | 'fiap' | 'verde' }) {
   const tons = {
     neutro: 'bg-[var(--painel-2)] suave',
