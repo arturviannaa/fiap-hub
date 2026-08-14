@@ -34,16 +34,18 @@
   --blur: blur(24px) saturate(160%);
 }
 
+/* Paleta oficial FIAP (extraída do CSS de fiap.com.br): atomic-black,
+   casual-black, frosted-silver, ultrasonic, magenta. */
 .dark {
-  --fundo: #0c0d11;
-  --painel: rgba(255, 255, 255, 0.055);
-  --painel-2: rgba(255, 255, 255, 0.035);
-  --borda: rgba(255, 255, 255, 0.09);
-  --texto: #eceef4;
-  --texto-2: #969aa8;
-  --codigo-fundo: #0e1015;
+  --fundo: #0e0f10; /* --color-atomic-black */
+  --painel: rgba(24, 24, 24, 0.6); /* --color-casual-black, translúcido */
+  --painel-2: rgba(24, 24, 24, 0.38);
+  --borda: rgba(172, 193, 204, 0.14); /* --color-ultrasonic, tom frio da FIAP */
+  --texto: #ffffff; /* --color-white */
+  --texto-2: #bdbfc7; /* --color-frosted-silver */
+  --codigo-fundo: #0e0f10;
   --sombra:
-    0 22px 50px -30px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    0 22px 50px -30px rgba(0, 0, 0, 0.78), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
   --blur: blur(24px) saturate(140%);
 }
 
