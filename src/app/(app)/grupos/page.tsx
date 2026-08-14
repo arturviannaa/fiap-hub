@@ -6,7 +6,7 @@ import { gruposDoUsuario } from '@/lib/chat'
 import { convidarParaGrupo, removerDoGrupo, sairDoGrupo } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
 import { FormGrupo } from '@/components/form-grupo'
-import { Avatar, Selo, Vazio } from '@/components/ui'
+import { Avatar, Botao, BotaoLink, Selo, Vazio } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Grupos' }
@@ -58,12 +58,9 @@ export default async function Grupos() {
                     <h3 className="font-semibold">{g.nome}</h3>
                     {g.criador_id === u.id && <Selo tom="fiap">criador</Selo>}
                     <div className="flex-1" />
-                    <Link
-                      href={`/chat?canal=g:${g.id}`}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-fiap-500 px-3 text-sm font-medium text-white hover:bg-fiap-600"
-                    >
+                    <BotaoLink href={`/chat?canal=g:${g.id}`} tamanho="sm">
                       <MessageSquare size={14} /> Abrir chat
-                    </Link>
+                    </BotaoLink>
                   </div>
                   {g.descricao && <p className="mt-1 text-sm suave">{g.descricao}</p>}
 
@@ -104,16 +101,16 @@ export default async function Grupos() {
                             </option>
                           ))}
                         </select>
-                        <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-sm hover:bg-[var(--painel-2)]">
+                        <Botao type="submit" variante="neutro" tamanho="sm">
                           <UserPlus size={14} /> Convidar
-                        </button>
+                        </Botao>
                       </form>
                     )}
                     <div className="flex-1" />
                     <form action={sairDoGrupo.bind(null, g.id)}>
-                      <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-500/30 px-2.5 text-sm text-red-600 hover:bg-red-500/10 dark:text-red-400">
+                      <Botao type="submit" variante="perigo" tamanho="sm">
                         <LogOut size={14} /> Sair do grupo
-                      </button>
+                      </Botao>
                     </form>
                   </div>
                 </article>
