@@ -47,9 +47,11 @@ As defesas em camadas:
 
 Suítes de ataque em `scripts/` (rodam contra a instância local).
 
-Assunção conhecida: o conteúdo das aulas vem do repositório da professora e é renderizado
-como HTML confiável. Um `ponytail:` marca esse ponto — sanitizar quebraria as tabelas do
-pandas, e o vetor exigiria comprometer o GitHub dela.
+O conteúdo das aulas vem de repositórios de terceiros, então todo HTML de notebook passa
+por uma allowlist em build time (`scripts/sanitiza.mjs`) antes de virar JSON — o app só
+injeta o que já foi sanitizado. A allowlist preserva tabelas do pandas e imagens inline do
+matplotlib; `<script>`, `<iframe>`, `<style>`, `<form>`, handlers `on*` e `javascript:` caem.
+Coberto por `scripts/test-sanitizacao.mjs` (12 vetores), que roda no `npm test`.
 
 ## Stack
 
