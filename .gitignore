@@ -15,3 +15,9 @@ tsconfig.tsbuildinfo
 secrets/
 *firebase-adminsdk*.json
 android/app/google-services.json
+
+# acesso ao banco de prod (tem senha e detalhes de tunel)
+PROD-TUNNEL.md
+
+# overrides locais de docker compose (nunca deploy)
+docker-compose.override.yml
