@@ -223,6 +223,40 @@ export function quando(data: string | Date) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
+const TIPOS_ARQUIVO: Record<string, { rotulo: string; cor: string }> = {
+  pdf: { rotulo: 'PDF', cor: '#e5115f' },
+  py: { rotulo: '.py', cor: '#2d6fe5' },
+  xlsx: { rotulo: 'XLSX', cor: '#1f9d55' },
+  xls: { rotulo: 'XLS', cor: '#1f9d55' },
+  csv: { rotulo: 'CSV', cor: '#1f9d55' },
+  docx: { rotulo: 'DOC', cor: '#2d6fe5' },
+  doc: { rotulo: 'DOC', cor: '#2d6fe5' },
+  png: { rotulo: 'IMG', cor: '#8b5cf6' },
+  jpg: { rotulo: 'IMG', cor: '#8b5cf6' },
+  jpeg: { rotulo: 'IMG', cor: '#8b5cf6' },
+  gif: { rotulo: 'IMG', cor: '#8b5cf6' },
+  webp: { rotulo: 'IMG', cor: '#8b5cf6' },
+  zip: { rotulo: 'ZIP', cor: '#7a7280' },
+  txt: { rotulo: 'TXT', cor: '#7a7280' },
+  json: { rotulo: 'JSON', cor: '#7a7280' },
+}
+
+/** Categoria dos chips de filtro em Materiais. */
+export function categoriaArquivo(nome: string): 'pdf' | 'py' | 'planilha' | 'imagem' | 'outro' {
+  const ext = nome.split('.').pop()?.toLowerCase() ?? ''
+  if (ext === 'pdf') return 'pdf'
+  if (ext === 'py') return 'py'
+  if (['xlsx', 'xls', 'csv'].includes(ext)) return 'planilha'
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return 'imagem'
+  return 'outro'
+}
+
+/** Badge (rótulo + cor) do tipo de arquivo, pela extensão do nome. */
+export function tipoArquivo(nome: string) {
+  const ext = nome.split('.').pop()?.toLowerCase() ?? ''
+  return TIPOS_ARQUIVO[ext] ?? { rotulo: ext ? ext.slice(0, 4).toUpperCase() : 'ARQ', cor: '#7a7280' }
+}
+
 // bytes chega como string quando vem do Postgres (BIGINT vira string no pg).
 export function tamanhoLegivel(bytes: number | string) {
   const u = ['B', 'KB', 'MB', 'GB']

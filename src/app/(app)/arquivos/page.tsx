@@ -1,30 +1,16 @@
-import Link from 'next/link'
-import { Download, FileText, Globe, Lock, Trash2, Upload } from 'lucide-react'
 import { usuarioAtual } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { acharAula, todasAulas } from '@/lib/conteudo'
 import { discAtiva } from '@/lib/disciplina'
 import { redirect } from 'next/navigation'
-import { apagarArquivo } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
 import { FormUpload } from '@/components/form-upload'
-import { IconeBadge, Segmentado, Selo, Vazio, quando, tamanhoLegivel } from '@/components/ui'
+import { ListaMateriais, type ArquivoLinha } from '@/components/lista-materiais'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Materiais' }
 
-type Arquivo = {
-  id: number
-  nome: string
-  descricao: string
-  tamanho: number
-  publico: boolean
-  aula_slug: string | null
-  usuario_id: number
-  downloads: number
-  criado_em: string
-  autor: string
-}
+type Linha = Omit<ArquivoLinha, 'aulaTitulo'> & { aula_slug: string | null }
 
 export default async function Arquivos({ searchParams }: { searchParams: Promise<{ aba?: string }> }) {
   const u = await usuarioAtual()
@@ -32,103 +18,36 @@ export default async function Arquivos({ searchParams }: { searchParams: Promise
   if (!disc) redirect('/disciplinas')
   const aba = (await searchParams).aba === 'meus' ? 'meus' : 'turma'
 
-  const arquivos = await sql<Arquivo>(
+  const arquivos = await sql<Linha>(
     aba === 'meus'
-      ? `SELECT a.*, u.nome AS autor FROM arquivos a JOIN usuarios u ON u.id = a.usuario_id
+      ? `SELECT a.id, a.nome, a.descricao, a.tamanho, a.publico, a.usuario_id, a.downloads, a.criado_em, a.aula_slug,
+                u.nome AS autor, u.foto AS usuario_foto
+         FROM arquivos a JOIN usuarios u ON u.id = a.usuario_id
          WHERE a.usuario_id = $1 AND a.disciplina = $2 AND a.descricao <> 'anexo do chat' ORDER BY a.id DESC`
-      : `SELECT a.*, u.nome AS autor FROM arquivos a JOIN usuarios u ON u.id = a.usuario_id
+      : `SELECT a.id, a.nome, a.descricao, a.tamanho, a.publico, a.usuario_id, a.downloads, a.criado_em, a.aula_slug,
+                u.nome AS autor, u.foto AS usuario_foto
+         FROM arquivos a JOIN usuarios u ON u.id = a.usuario_id
          WHERE a.publico AND a.disciplina = $1 AND a.descricao <> 'anexo do chat' ORDER BY a.id DESC`,
     aba === 'meus' ? [u.id, disc] : [disc],
   )
 
+  const arquivosComAula: ArquivoLinha[] = arquivos.map((a) => ({
+    ...a,
+    aulaTitulo: a.aula_slug ? (acharAula(a.aula_slug)?.titulo ?? null) : null,
+  }))
+
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       <Cabecalho
         titulo="Materiais"
         descricao="Resumos, listas resolvidas, PDFs e scripts. Público vai para a turma; privado fica só com você."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
-        <div className="painel h-fit space-y-3 p-4 lg:sticky lg:top-20">
-          <h2 className="flex items-center gap-2 font-semibold">
-            <Upload size={17} className="text-fiap-500" /> Enviar material
-          </h2>
-          <FormUpload aulas={todasAulas(disc).map((a) => ({ slug: a.slug, titulo: a.titulo }))} />
-        </div>
-
-        <div>
-          <div className="mb-4">
-            <Segmentado
-              itens={[
-                { href: '/arquivos?aba=turma', rotulo: 'Da turma', ativo: aba === 'turma' },
-                { href: '/arquivos?aba=meus', rotulo: 'Meus arquivos', ativo: aba === 'meus' },
-              ]}
-            />
-          </div>
-
-          {arquivos.length === 0 ? (
-            <Vazio
-              icone={<FileText size={22} />}
-              titulo="Nenhum material ainda"
-              texto="Envie o primeiro arquivo pelo formulário ao lado."
-            />
-          ) : (
-            <ul className="painel divide-y overflow-hidden">
-              {arquivos.map((a) => {
-                const aula = a.aula_slug ? acharAula(a.aula_slug) : null
-                return (
-                  <li key={a.id} className="flex items-center gap-3 p-3.5">
-                    <IconeBadge tamanho={40} tom="neutro">
-                      <FileText size={18} />
-                    </IconeBadge>
-                    <div className="min-w-0 flex-1">
-                      <a
-                        href={`/api/arquivos/${a.id}`}
-                        className="block truncate font-medium hover:text-fiap-500"
-                      >
-                        {a.nome}
-                      </a>
-                      {a.descricao && <p className="truncate text-sm suave">{a.descricao}</p>}
-                      <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs suave">
-                        <span>{tamanhoLegivel(a.tamanho)}</span>
-                        <span>·</span>
-                        <span>{a.usuario_id === u.id ? 'você' : a.autor.split(' ')[0]}</span>
-                        <span>·</span>
-                        <span>{quando(a.criado_em)}</span>
-                        {a.downloads > 0 && <span>· {a.downloads} downloads</span>}
-                        {aula && (
-                          <Link href={`/aulas/${aula.slug}`} className="text-fiap-500 hover:underline">
-                            {aula.titulo}
-                          </Link>
-                        )}
-                        {a.publico ? (
-                          <Selo tom="fiap">
-                            <Globe size={10} /> pública
-                          </Selo>
-                        ) : (
-                          <Selo>
-                            <Lock size={10} /> privado
-                          </Selo>
-                        )}
-                      </p>
-                    </div>
-                    <a href={`/api/arquivos/${a.id}`} className="suave hover:text-fiap-500" aria-label="Baixar">
-                      <Download size={17} />
-                    </a>
-                    {a.usuario_id === u.id && (
-                      <form action={apagarArquivo.bind(null, a.id)}>
-                        <button className="suave hover:text-red-500" aria-label="Apagar arquivo">
-                          <Trash2 size={16} />
-                        </button>
-                      </form>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </div>
+      <div className="mb-5">
+        <FormUpload dropzone aulas={todasAulas(disc).map((a) => ({ slug: a.slug, titulo: a.titulo }))} />
       </div>
+
+      <ListaMateriais arquivos={arquivosComAula} aba={aba} meuId={u.id} />
     </div>
   )
 }
