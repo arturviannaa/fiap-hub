@@ -7,7 +7,7 @@ import { discAtiva } from '@/lib/disciplina'
 import { redirect } from 'next/navigation'
 import { apagarNota, salvarNota } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
-import { Area, Avatar, Botao, Campo, Selo, Vazio, quando } from '@/components/ui'
+import { Area, Avatar, Botao, Campo, Segmentado, Selo, Vazio, quando } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Anotações' }
@@ -101,18 +101,13 @@ export default async function Anotacoes({ searchParams }: { searchParams: Promis
         </form>
 
         <div>
-          <div className="mb-4 inline-flex rounded-xl border p-1">
-            {(['minhas', 'turma'] as const).map((t) => (
-              <Link
-                key={t}
-                href={`/anotacoes?aba=${t}`}
-                className={`rounded-lg px-3 py-1.5 text-sm ${
-                  aba === t ? 'bg-fiap-500 font-medium text-white' : 'suave'
-                }`}
-              >
-                {t === 'minhas' ? 'Minhas' : 'Da turma'}
-              </Link>
-            ))}
+          <div className="mb-4">
+            <Segmentado
+              itens={[
+                { href: '/anotacoes?aba=minhas', rotulo: 'Minhas', ativo: aba === 'minhas' },
+                { href: '/anotacoes?aba=turma', rotulo: 'Da turma', ativo: aba === 'turma' },
+              ]}
+            />
           </div>
 
           {notas.length === 0 ? (

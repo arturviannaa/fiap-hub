@@ -59,6 +59,28 @@ export function Area({ className = '', ...props }: ComponentProps<'textarea'>) {
   )
 }
 
+// Abas em pill (ex.: "Minhas" / "Da turma"). Navegação por link (searchParams),
+// não é estado de cliente — cada aba é uma URL diferente.
+export function Segmentado({ itens }: { itens: { href: string; rotulo: string; ativo: boolean }[] }) {
+  return (
+    <div className="inline-flex gap-0.5 rounded-2xl border bg-[var(--painel-2)] p-1">
+      {itens.map((it) => (
+        <Link
+          key={it.href}
+          href={it.href}
+          className={`rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+            it.ativo
+              ? 'bg-gradient-to-br from-fiap-400 to-fiap-500 text-white shadow-md shadow-fiap-500/30'
+              : 'suave hover:text-[var(--texto)]'
+          }`}
+        >
+          {it.rotulo}
+        </Link>
+      ))}
+    </div>
+  )
+}
+
 export function Selo({ children, tom = 'neutro' }: { children: ReactNode; tom?: 'neutro' | 'fiap' | 'verde' }) {
   const tons = {
     neutro: 'bg-[var(--painel-2)] suave',
