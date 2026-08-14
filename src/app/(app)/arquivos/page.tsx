@@ -8,7 +8,7 @@ import { redirect } from 'next/navigation'
 import { apagarArquivo } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
 import { FormUpload } from '@/components/form-upload'
-import { Selo, Vazio, quando, tamanhoLegivel } from '@/components/ui'
+import { IconeBadge, Segmentado, Selo, Vazio, quando, tamanhoLegivel } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Materiais' }
@@ -57,18 +57,13 @@ export default async function Arquivos({ searchParams }: { searchParams: Promise
         </div>
 
         <div>
-          <div className="mb-4 inline-flex rounded-xl border p-1">
-            {(['turma', 'meus'] as const).map((t) => (
-              <Link
-                key={t}
-                href={`/arquivos?aba=${t}`}
-                className={`rounded-lg px-3 py-1.5 text-sm ${
-                  aba === t ? 'bg-fiap-500 font-medium text-white' : 'suave'
-                }`}
-              >
-                {t === 'turma' ? 'Da turma' : 'Meus arquivos'}
-              </Link>
-            ))}
+          <div className="mb-4">
+            <Segmentado
+              itens={[
+                { href: '/arquivos?aba=turma', rotulo: 'Da turma', ativo: aba === 'turma' },
+                { href: '/arquivos?aba=meus', rotulo: 'Meus arquivos', ativo: aba === 'meus' },
+              ]}
+            />
           </div>
 
           {arquivos.length === 0 ? (
@@ -83,9 +78,9 @@ export default async function Arquivos({ searchParams }: { searchParams: Promise
                 const aula = a.aula_slug ? acharAula(a.aula_slug) : null
                 return (
                   <li key={a.id} className="flex items-center gap-3 p-3.5">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--painel-2)] suave">
+                    <IconeBadge tamanho={40} tom="neutro">
                       <FileText size={18} />
-                    </span>
+                    </IconeBadge>
                     <div className="min-w-0 flex-1">
                       <a
                         href={`/api/arquivos/${a.id}`}
