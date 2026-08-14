@@ -128,7 +128,7 @@ export default async function Painel() {
                 className="painel group flex flex-col gap-3 p-4 transition-colors hover:border-fiap-500/50"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-fiap-500/12 text-fiap-500">
+                  <span className="grid h-11 w-11 place-items-center rounded-2xl border border-fiap-500/20 bg-fiap-500/12 text-fiap-500">
                     <IconeModulo nome={m.icone} />
                   </span>
                   {p === 100 && <Selo tom="verde">completo</Selo>}
