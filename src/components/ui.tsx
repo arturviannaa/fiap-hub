@@ -2,11 +2,11 @@ import Link from 'next/link'
 import type { ComponentProps, ReactNode } from 'react'
 
 const BASE =
-  'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none'
+  'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none'
 
 const VARIANTES = {
-  primario: 'bg-fiap-500 text-white hover:bg-fiap-600 shadow-sm shadow-fiap-500/25',
-  neutro: 'border hover:bg-[var(--painel-2)]',
+  primario: 'bg-gradient-to-br from-fiap-400 to-fiap-500 text-white hover:from-fiap-500 hover:to-fiap-600 shadow-lg shadow-fiap-500/30',
+  neutro: 'border bg-[var(--painel-2)] backdrop-blur-sm hover:bg-[var(--painel)]',
   fantasma: 'hover:bg-[var(--painel-2)] suave hover:text-[var(--texto)]',
   perigo: 'border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10',
 } as const
