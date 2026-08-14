@@ -3,9 +3,12 @@
 # Faz commit do que estiver pendente, empurra pro GitHub e reconstrói lá.
 set -euo pipefail
 
-VPS="${VPS:-caixas7-vps}"
+# Alvo do deploy fica em .deploy-target (nao versionado). Formato:
+#   VPS=usuario@host   DIR=/caminho/do/app   URL=https://seu.dominio
+[ -f .deploy-target ] && . ./.deploy-target
+VPS="${VPS:?defina VPS em .deploy-target ou exporte VPS=usuario@host}"
 DIR="${DIR:-/opt/fiap-hub}"
-URL="${URL:-https://fiap.pervian.tech}"
+URL="${URL:?defina URL em .deploy-target ou exporte URL=https://seu.dominio}"
 
 cd "$(dirname "$0")"
 
