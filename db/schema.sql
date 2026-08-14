@@ -65,6 +65,8 @@ CREATE INDEX IF NOT EXISTS notas_aula_idx ON notas (aula_slug);
 CREATE INDEX IF NOT EXISTS notas_usuario_idx ON notas (usuario_id);
 -- Disciplina a que a nota pertence (notas avulsas precisam saber).
 ALTER TABLE notas ADD COLUMN IF NOT EXISTS disciplina TEXT NOT NULL DEFAULT 'python';
+-- Visual do cartão: 'cartao' (padrão, vidro) ou 'postit' (post-it colorido).
+ALTER TABLE notas ADD COLUMN IF NOT EXISTS estilo TEXT NOT NULL DEFAULT 'cartao';
 
 CREATE TABLE IF NOT EXISTS arquivos (
   id           SERIAL PRIMARY KEY,
