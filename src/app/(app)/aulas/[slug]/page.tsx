@@ -8,7 +8,7 @@ import { BlocoCodigo } from '@/components/bloco-codigo'
 import { MarcarAula } from '@/components/marcar-aula'
 import { NotasDaAula } from '@/components/notas-aula'
 import { ArquivosDaAula } from '@/components/arquivos-aula'
-import { Selo } from '@/components/ui'
+import { BotaoLink, Selo } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 
@@ -119,7 +119,7 @@ export default async function PaginaAula({ params }: { params: Promise<{ slug: s
               <div key={i} className="space-y-2">
                 <BlocoCodigo html={b.html} codigo={b.codigo} indice={++nCodigo} />
                 {b.saidas.map((s, j) => (
-                  <div key={j} className="rounded-xl border bg-[var(--painel-2)] px-4 py-3">
+                  <div key={j} className="rounded-2xl border bg-[var(--painel-2)] px-4 py-3">
                     <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wide suave">saída</p>
                     {s.tipo === 'imagem' ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -146,22 +146,16 @@ export default async function PaginaAula({ params }: { params: Promise<{ slug: s
           <MarcarAula slug={slug} concluida={!!feito} />
           <div className="flex-1" />
           {anterior && (
-            <Link
-              href={`/aulas/${anterior.slug}`}
-              className="inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm hover:bg-[var(--painel-2)]"
-            >
+            <BotaoLink href={`/aulas/${anterior.slug}`} variante="neutro">
               <ArrowLeft size={15} /> <span className="hidden sm:inline">{anterior.titulo}</span>
               <span className="sm:hidden">Anterior</span>
-            </Link>
+            </BotaoLink>
           )}
           {proxima && (
-            <Link
-              href={`/aulas/${proxima.slug}`}
-              className="inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm hover:bg-[var(--painel-2)]"
-            >
+            <BotaoLink href={`/aulas/${proxima.slug}`} variante="neutro">
               <span className="hidden sm:inline">{proxima.titulo}</span>
               <span className="sm:hidden">Próxima</span> <ArrowRight size={15} />
-            </Link>
+            </BotaoLink>
           )}
         </div>
 
