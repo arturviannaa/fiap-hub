@@ -174,14 +174,14 @@ export function QuadroAnotacoes({
             { href: '/anotacoes?aba=turma', rotulo: `Da turma · ${contagens.turma}`, ativo: aba === 'turma' },
           ]}
         />
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <div className="relative min-w-0 flex-1 sm:flex-none">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 suave" />
             <Campo
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Filtrar anotações…"
-              className="w-56 pl-9"
+              className="w-full pl-9 sm:w-56"
             />
           </div>
           <Botao tamanho="sm" onClick={() => setCriando(true)}>

@@ -167,12 +167,12 @@ export function Shell({
           </button>
           <Link
             href="/busca"
-            className="flex h-10 flex-1 items-center gap-2 rounded-2xl border border-[var(--borda)] bg-[var(--painel-2)] px-4 text-sm suave hover:bg-[var(--painel)] sm:max-w-sm"
+            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-2xl border border-[var(--borda)] bg-[var(--painel-2)] px-4 text-sm suave hover:bg-[var(--painel)] sm:max-w-sm"
           >
-            <Search size={16} />
-            Buscar nas aulas…
+            <Search size={16} className="shrink-0" />
+            <span className="truncate">Buscar nas aulas…</span>
           </Link>
-          <div className="flex-1" />
+          <div className="hidden flex-1 sm:block" />
           <TemaBotao />
           <form action={sair}>
             <button
