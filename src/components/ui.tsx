@@ -2,11 +2,11 @@ import Link from 'next/link'
 import type { ComponentProps, ReactNode } from 'react'
 
 const BASE =
-  'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none'
+  'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none'
 
 const VARIANTES = {
-  primario: 'bg-fiap-500 text-white hover:bg-fiap-600 shadow-sm shadow-fiap-500/25',
-  neutro: 'border hover:bg-[var(--painel-2)]',
+  primario: 'bg-gradient-to-br from-fiap-400 to-fiap-500 text-white hover:from-fiap-500 hover:to-fiap-600 shadow-lg shadow-fiap-500/30',
+  neutro: 'border bg-[var(--painel-2)] backdrop-blur-sm hover:bg-[var(--painel)]',
   fantasma: 'hover:bg-[var(--painel-2)] suave hover:text-[var(--texto)]',
   perigo: 'border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10',
 } as const
@@ -56,6 +56,53 @@ export function Area({ className = '', ...props }: ComponentProps<'textarea'>) {
       className={`w-full rounded-xl border bg-[var(--painel)] p-3 text-sm leading-relaxed placeholder:text-[var(--texto-2)] focus:border-fiap-500 focus:outline-none ${className}`}
       {...props}
     />
+  )
+}
+
+// Abas em pill (ex.: "Minhas" / "Da turma"). Navegação por link (searchParams),
+// não é estado de cliente — cada aba é uma URL diferente.
+export function Segmentado({ itens }: { itens: { href: string; rotulo: string; ativo: boolean }[] }) {
+  return (
+    <div className="inline-flex gap-0.5 rounded-2xl border bg-[var(--painel-2)] p-1">
+      {itens.map((it) => (
+        <Link
+          key={it.href}
+          href={it.href}
+          className={`rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+            it.ativo
+              ? 'bg-gradient-to-br from-fiap-400 to-fiap-500 text-white shadow-md shadow-fiap-500/30'
+              : 'suave hover:text-[var(--texto)]'
+          }`}
+        >
+          {it.rotulo}
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+// Ícone com fundo colorido arredondado + borda (módulos, arquivos, cartões de
+// estatística). Um componente só pra não repetir a mesma classe em cada tela.
+export function IconeBadge({
+  children,
+  tamanho = 44,
+  tom = 'fiap',
+}: {
+  children: ReactNode
+  tamanho?: number
+  tom?: 'fiap' | 'neutro'
+}) {
+  const tons = {
+    fiap: 'border-fiap-500/20 bg-fiap-500/12 text-fiap-500',
+    neutro: 'border-[var(--borda)] bg-[var(--painel-2)] suave',
+  }
+  return (
+    <span
+      className={`grid shrink-0 place-items-center rounded-2xl border ${tons[tom]}`}
+      style={{ width: tamanho, height: tamanho }}
+    >
+      {children}
+    </span>
   )
 }
 
@@ -174,6 +221,40 @@ export function quando(data: string | Date) {
   if (seg < 86400) return `${Math.floor(seg / 3600)} h`
   if (seg < 604800) return `${Math.floor(seg / 86400)} d`
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+}
+
+const TIPOS_ARQUIVO: Record<string, { rotulo: string; cor: string }> = {
+  pdf: { rotulo: 'PDF', cor: '#e5115f' },
+  py: { rotulo: '.py', cor: '#2d6fe5' },
+  xlsx: { rotulo: 'XLSX', cor: '#1f9d55' },
+  xls: { rotulo: 'XLS', cor: '#1f9d55' },
+  csv: { rotulo: 'CSV', cor: '#1f9d55' },
+  docx: { rotulo: 'DOC', cor: '#2d6fe5' },
+  doc: { rotulo: 'DOC', cor: '#2d6fe5' },
+  png: { rotulo: 'IMG', cor: '#8b5cf6' },
+  jpg: { rotulo: 'IMG', cor: '#8b5cf6' },
+  jpeg: { rotulo: 'IMG', cor: '#8b5cf6' },
+  gif: { rotulo: 'IMG', cor: '#8b5cf6' },
+  webp: { rotulo: 'IMG', cor: '#8b5cf6' },
+  zip: { rotulo: 'ZIP', cor: '#7a7280' },
+  txt: { rotulo: 'TXT', cor: '#7a7280' },
+  json: { rotulo: 'JSON', cor: '#7a7280' },
+}
+
+/** Categoria dos chips de filtro em Materiais. */
+export function categoriaArquivo(nome: string): 'pdf' | 'py' | 'planilha' | 'imagem' | 'outro' {
+  const ext = nome.split('.').pop()?.toLowerCase() ?? ''
+  if (ext === 'pdf') return 'pdf'
+  if (ext === 'py') return 'py'
+  if (['xlsx', 'xls', 'csv'].includes(ext)) return 'planilha'
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return 'imagem'
+  return 'outro'
+}
+
+/** Badge (rótulo + cor) do tipo de arquivo, pela extensão do nome. */
+export function tipoArquivo(nome: string) {
+  const ext = nome.split('.').pop()?.toLowerCase() ?? ''
+  return TIPOS_ARQUIVO[ext] ?? { rotulo: ext ? ext.slice(0, 4).toUpperCase() : 'ARQ', cor: '#7a7280' }
 }
 
 // bytes chega como string quando vem do Postgres (BIGINT vira string no pg).

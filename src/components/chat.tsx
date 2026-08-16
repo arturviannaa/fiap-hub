@@ -182,10 +182,10 @@ export function Chat({
             <Link
               key={c.slug}
               href={`/chat?canal=${c.slug}`}
-              className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm ${
+              className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-sm ${
                 c.slug === canal
-                  ? 'bg-fiap-500/12 font-medium text-fiap-600 dark:text-fiap-400'
-                  : 'suave hover:bg-[var(--painel-2)] hover:text-[var(--texto)]'
+                  ? 'border-[var(--borda)] bg-[var(--painel)] font-semibold text-fiap-600 shadow-md shadow-fiap-500/10 dark:text-fiap-400'
+                  : 'border-transparent suave hover:bg-[var(--painel-2)] hover:text-[var(--texto)]'
               }`}
             >
               <Hash size={15} />
@@ -200,10 +200,10 @@ export function Chat({
             <Link
               key={g.id}
               href={`/chat?canal=g:${g.id}`}
-              className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm ${
+              className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-sm ${
                 `g:${g.id}` === canal
-                  ? 'bg-fiap-500/12 font-medium text-fiap-600 dark:text-fiap-400'
-                  : 'suave hover:bg-[var(--painel-2)] hover:text-[var(--texto)]'
+                  ? 'border-[var(--borda)] bg-[var(--painel)] font-semibold text-fiap-600 shadow-md shadow-fiap-500/10 dark:text-fiap-400'
+                  : 'border-transparent suave hover:bg-[var(--painel-2)] hover:text-[var(--texto)]'
               }`}
             >
               <Lock size={14} className="shrink-0" />

@@ -22,9 +22,9 @@ export default async function Entrar({
   const erro = codigo ? MENSAGENS[codigo] || 'Não foi possível entrar.' : undefined
 
   return (
-    <div className="w-full max-w-sm">
+    <>
       <div className="mb-8 lg:hidden">
-        <span className="grid h-11 w-11 place-items-center rounded-xl bg-fiap-500 text-lg font-bold text-white">
+        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-fiap-400 to-fiap-500 text-lg font-bold text-white shadow-lg shadow-fiap-500/40">
           F
         </span>
       </div>
@@ -32,6 +32,6 @@ export default async function Entrar({
       <p className="mb-6 mt-1 text-sm suave">Acesso restrito à turma, com e-mail {dominiosTexto}.</p>
 
       <FormEntrar erroInicial={erro} />
-    </div>
+    </>
   )
 }

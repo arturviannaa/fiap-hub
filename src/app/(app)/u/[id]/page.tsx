@@ -4,7 +4,7 @@ import { ArrowLeft, BookOpen, Files, MessageSquare, NotebookPen, Pencil } from '
 import { usuarioAtual } from '@/lib/auth'
 import { um } from '@/lib/db'
 import { todasAulas, totalAulasGlobais } from '@/lib/conteudo'
-import { Avatar, BotaoLink, TagsPapel } from '@/components/ui'
+import { Avatar, BotaoLink, IconeBadge, TagsPapel } from '@/components/ui'
 import { PresencaProvider, StatusPresenca } from '@/components/presenca-live'
 
 export const dynamic = 'force-dynamic'
@@ -83,10 +83,14 @@ export default async function PerfilPublico({ params }: { params: Promise<{ id: 
 
       <div className="mt-4 grid grid-cols-3 gap-3">
         {stats.map(({ Icone, valor, rotulo }) => (
-          <div key={rotulo} className="painel p-4">
-            <Icone size={17} className="text-fiap-500" />
-            <p className="mt-2 text-xl font-semibold">{valor}</p>
-            <p className="text-xs suave">{rotulo}</p>
+          <div key={rotulo} className="painel flex flex-col gap-3 p-4">
+            <IconeBadge tamanho={38}>
+              <Icone size={17} />
+            </IconeBadge>
+            <div>
+              <p className="text-xl font-semibold">{valor}</p>
+              <p className="text-xs suave">{rotulo}</p>
+            </div>
           </div>
         ))}
       </div>

@@ -47,18 +47,20 @@ export async function salvarNota(dados: FormData) {
   const titulo = String(dados.get('titulo') || '').trim().slice(0, 160)
   const aula = String(dados.get('aula') || '') || null
   const publica = dados.get('publica') === 'on' || dados.get('publica') === 'true'
+  const estilo = dados.get('estilo') === 'postit' ? 'postit' : 'cartao'
   if (!corpo) return
   if (id) {
     // O WHERE com usuario_id e a autorizacao: nao da para editar nota alheia.
     await sql(
-      'UPDATE notas SET titulo=$1, corpo=$2, publica=$3, atualizado_em=now() WHERE id=$4 AND usuario_id=$5',
-      [titulo, corpo, publica, id, u.id],
+      'UPDATE notas SET titulo=$1, corpo=$2, publica=$3, estilo=$4, atualizado_em=now() WHERE id=$5 AND usuario_id=$6',
+      [titulo, corpo, publica, estilo, id, u.id],
     )
   } else {
     const disc = await discOuPadrao()
-    await sql('INSERT INTO notas (usuario_id, aula_slug, titulo, corpo, publica, disciplina) VALUES ($1,$2,$3,$4,$5,$6)', [
-      u.id, aula, titulo, corpo, publica, disc,
-    ])
+    await sql(
+      'INSERT INTO notas (usuario_id, aula_slug, titulo, corpo, publica, estilo, disciplina) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+      [u.id, aula, titulo, corpo, publica, estilo, disc],
+    )
   }
   revalidatePath('/anotacoes')
   if (aula) revalidatePath(`/aulas/${aula}`)
