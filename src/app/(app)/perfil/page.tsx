@@ -6,7 +6,7 @@ import { salvarPerfil } from '@/lib/acoes'
 import { Cabecalho } from '@/components/cabecalho'
 import { FotoPerfil } from '@/components/foto-perfil'
 import { sair } from '@/lib/acoes-auth'
-import { Area, Botao, Campo, TagsPapel } from '@/components/ui'
+import { Area, Botao, Campo, IconeBadge, TagsPapel } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Perfil' }
@@ -44,21 +44,22 @@ export default async function Perfil() {
         </div>
         <div className="flex-1" />
         <form action={sair}>
-          <button
-            type="submit"
-            className="inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm hover:bg-[var(--painel-2)]"
-          >
+          <Botao type="submit" variante="neutro">
             <LogOut size={15} /> Sair
-          </button>
+          </Botao>
         </form>
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {cartoes.map(({ Icone, valor, rotulo }) => (
-          <div key={rotulo} className="painel p-4">
-            <Icone size={17} className="text-fiap-500" />
-            <p className="mt-2 text-xl font-semibold">{valor}</p>
-            <p className="text-xs suave">{rotulo}</p>
+          <div key={rotulo} className="painel flex flex-col gap-3 p-4">
+            <IconeBadge tamanho={38}>
+              <Icone size={17} />
+            </IconeBadge>
+            <div>
+              <p className="text-xl font-semibold">{valor}</p>
+              <p className="text-xs suave">{rotulo}</p>
+            </div>
           </div>
         ))}
       </div>
