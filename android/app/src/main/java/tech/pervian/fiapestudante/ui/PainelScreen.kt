@@ -6,12 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.AccountTree
-import androidx.compose.material.icons.filled.DataArray
-import androidx.compose.material.icons.filled.Functions
-import androidx.compose.material.icons.filled.Layers
-import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,8 +17,6 @@ import androidx.compose.ui.unit.sp
 import tech.pervian.fiapestudante.data.Api
 import tech.pervian.fiapestudante.data.RespAulas
 import tech.pervian.fiapestudante.data.Sessao
-
-private val iconesModulo = listOf(Icons.Filled.Category, Icons.Filled.AccountTree, Icons.Filled.DataArray, Icons.Filled.Repeat, Icons.Filled.Functions, Icons.Filled.Layers)
 
 @Composable
 fun PainelScreen(api: Api, sessao: Sessao, disc: String, onAbrirAula: (String) -> Unit, onIrAulas: () -> Unit) {

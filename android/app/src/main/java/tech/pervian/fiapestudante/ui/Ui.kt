@@ -27,6 +27,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountTree
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.DataArray
+import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -117,9 +125,70 @@ fun IconeCaixa(icone: ImageVector, cor: Color = FiapMagenta, tamanho: Dp = 40.dp
     ) { Icon(icone, null, tint = cor, modifier = Modifier.size(tamanho * 0.48f)) }
 }
 
-private val cores = listOf(
+val cores = listOf(
     0xFFED145B, 0xFF7C5CFF, 0xFF0EA5E9, 0xFF10B981, 0xFFF59E0B, 0xFFEF4444, 0xFF8B5CF6, 0xFF14B8A6,
 ).map { Color(it) }
+
+// Ícones de módulo, ciclados por índice — Painel e Aulas usam a mesma sequência.
+val iconesModulo = listOf(
+    Icons.Filled.Category, Icons.Filled.AccountTree, Icons.Filled.DataArray,
+    Icons.Filled.Repeat, Icons.Filled.Functions, Icons.Filled.Layers,
+)
+
+// Paleta de post-it — Anotações cicla por essas cores conforme o índice.
+val coresPostit = listOf(0xFFFFF3A8, 0xFFBDE4C4, 0xFFFFC9DD, 0xFFBCD8FF, 0xFFFFD9A8, 0xFFE6D5FF).map { Color(it) }
+
+@Composable private fun corChipCodigo() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0x1FFFFFFF) else Color(0x21785A8C)
+
+// Chip pequeno estilo "código" (monospace, fundo neutro) — tags de aula, badges.
+@Composable
+fun TagCodigo(texto: String) {
+    Box(
+        Modifier.clip(RoundedCornerShape(6.dp)).background(corChipCodigo())
+            .padding(horizontal = 7.dp, vertical = 3.dp),
+    ) { Text(texto, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = 11.sp, color = corMuted()) }
+}
+
+// Seletor duplo em pílula (segmented control) — Minhas/Da turma, Da turma/Meus arquivos.
+@Composable
+fun SegmentoDuplo(rotuloA: String, rotuloB: String, aSelecionado: Boolean, onA: () -> Unit, onB: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier.clip(RoundedCornerShape(13.dp)).background(corPainel())
+            .border(androidx.compose.foundation.BorderStroke(1.dp, corBorda()), RoundedCornerShape(13.dp))
+            .padding(4.dp),
+    ) {
+        SegmentoBotao(rotuloA, aSelecionado, onA, Modifier.weight(1f))
+        SegmentoBotao(rotuloB, !aSelecionado, onB, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun SegmentoBotao(rotulo: String, on: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier.clip(RoundedCornerShape(10.dp))
+            .then(if (on) Modifier.background(Brush.horizontalGradient(FiapGradiente)) else Modifier)
+            .clickableSemRipple(onClick)
+            .padding(vertical = 9.dp),
+        contentAlignment = Alignment.Center,
+    ) { Text(rotulo, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (on) Color.White else corMuted()) }
+}
+
+// FAB redondo só com ícone, gradiente — usado em Anotações e Grupos.
+@Composable
+fun FabRedondo(icone: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier.size(58.dp).clip(RoundedCornerShape(20.dp)).background(Brush.linearGradient(FiapGradiente))
+            .clickableSemRipple(onClick),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icone, null, tint = Color.White, modifier = Modifier.size(26.dp)) }
+}
+
+// Borda tracejada — usada na dropzone de upload de Materiais.
+fun Modifier.bordaTracejada(cor: Color, raio: Dp = 18.dp) = this.drawWithContent {
+    drawContent()
+    val stroke = Stroke(width = 1.6.dp.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 8f)))
+    drawRoundRect(cor, style = stroke, cornerRadius = androidx.compose.ui.geometry.CornerRadius(raio.toPx()))
+}
 
 @Composable
 fun Avatar(nome: String, usuarioId: Int, foto: String?, token: String?, tamanho: Int = 40) {
