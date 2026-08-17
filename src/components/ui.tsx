@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { ComponentProps, ReactNode } from 'react'
 
 const BASE =
-  'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none'
+  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-2xl font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none'
 
 const VARIANTES = {
   primario: 'bg-gradient-to-br from-fiap-400 to-fiap-500 text-white hover:from-fiap-500 hover:to-fiap-600 shadow-lg shadow-fiap-500/30',

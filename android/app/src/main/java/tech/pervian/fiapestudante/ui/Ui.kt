@@ -9,13 +9,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +27,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountTree
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.DataArray
+import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,12 +42,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -50,11 +63,132 @@ import tech.pervian.fiapestudante.data.BASE_URL
 
 val FiapMagenta = Color(0xFFED145B)
 val FiapRosa = Color(0xFFFB7099)
-val FiapGradiente = listOf(FiapMagenta, FiapRosa)
+val FiapGradiente = listOf(FiapRosa, FiapMagenta)
 
-private val cores = listOf(
+// Tokens "glass" — mesmos valores do --painel/--borda/--texto-2 do web (globals.css).
+@Composable fun corFundo() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0xFF0E0F10) else Color(0xFFF2F0EE)
+@Composable fun corPainel() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0x99181818) else Color(0x8CFFFFFF)
+@Composable fun corBorda() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0x24ACC1CC) else Color(0x1414101E)
+@Composable fun corMuted() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0xFFBDBFC7) else Color(0xFF7A7280)
+
+// Painel de vidro: fundo translúcido + borda fina, a base visual de todo o novo design.
+@Composable
+fun GlassCard(modifier: Modifier = Modifier, padding: Dp = 16.dp, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(corPainel())
+            .border(androidx.compose.foundation.BorderStroke(1.dp, corBorda()), RoundedCornerShape(20.dp))
+            .padding(padding),
+        content = content,
+    )
+}
+
+// Botão principal cheio, gradiente rosa->magenta — usado em CTAs de destaque.
+@Composable
+fun BotaoGradiente(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, cores: List<Color> = FiapGradiente, onClick: () -> Unit) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (habilitado) Brush.horizontalGradient(cores) else Brush.horizontalGradient(listOf(Color.Gray, Color.Gray)))
+            .then(if (habilitado) Modifier.clickable(onClick = onClick) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) { Text(texto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
+}
+
+// Barra de progresso linear com trilho neutro e preenchimento em gradiente.
+@Composable
+fun BarraProgressoLinear(pct: Float, modifier: Modifier = Modifier) {
+    val alvo = pct.coerceIn(0f, 1f)
+    val anim by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = alvo, animationSpec = tween(700), label = "barra",
+    )
+    Box(
+        modifier.fillMaxWidth().height(9.dp).clip(RoundedCornerShape(7.dp)).background(corBorda().copy(alpha = 0.5f)),
+    ) {
+        Box(
+            Modifier.fillMaxHeight().fillMaxWidth(anim).clip(RoundedCornerShape(7.dp))
+                .background(Brush.horizontalGradient(FiapGradiente)),
+        )
+    }
+}
+
+// Ícone dentro de caixa arredondada colorida — usado em módulos, grupos e tipos de arquivo.
+@Composable
+fun IconeCaixa(icone: ImageVector, cor: Color = FiapMagenta, tamanho: Dp = 40.dp) {
+    Box(
+        Modifier.size(tamanho).clip(RoundedCornerShape(12.dp)).background(cor.copy(alpha = 0.12f))
+            .border(androidx.compose.foundation.BorderStroke(1.dp, cor.copy(alpha = 0.18f)), RoundedCornerShape(12.dp)),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icone, null, tint = cor, modifier = Modifier.size(tamanho * 0.48f)) }
+}
+
+val cores = listOf(
     0xFFED145B, 0xFF7C5CFF, 0xFF0EA5E9, 0xFF10B981, 0xFFF59E0B, 0xFFEF4444, 0xFF8B5CF6, 0xFF14B8A6,
 ).map { Color(it) }
+
+// Ícones de módulo, ciclados por índice — Painel e Aulas usam a mesma sequência.
+val iconesModulo = listOf(
+    Icons.Filled.Category, Icons.Filled.AccountTree, Icons.Filled.DataArray,
+    Icons.Filled.Repeat, Icons.Filled.Functions, Icons.Filled.Layers,
+)
+
+// Paleta de post-it — Anotações cicla por essas cores conforme o índice.
+val coresPostit = listOf(0xFFFFF3A8, 0xFFBDE4C4, 0xFFFFC9DD, 0xFFBCD8FF, 0xFFFFD9A8, 0xFFE6D5FF).map { Color(it) }
+
+@Composable private fun corChipCodigo() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0x1FFFFFFF) else Color(0x21785A8C)
+
+// Chip pequeno estilo "código" (monospace, fundo neutro) — tags de aula, badges.
+@Composable
+fun TagCodigo(texto: String) {
+    Box(
+        Modifier.clip(RoundedCornerShape(6.dp)).background(corChipCodigo())
+            .padding(horizontal = 7.dp, vertical = 3.dp),
+    ) { Text(texto, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = 11.sp, color = corMuted()) }
+}
+
+// Seletor duplo em pílula (segmented control) — Minhas/Da turma, Da turma/Meus arquivos.
+@Composable
+fun SegmentoDuplo(rotuloA: String, rotuloB: String, aSelecionado: Boolean, onA: () -> Unit, onB: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier.clip(RoundedCornerShape(13.dp)).background(corPainel())
+            .border(androidx.compose.foundation.BorderStroke(1.dp, corBorda()), RoundedCornerShape(13.dp))
+            .padding(4.dp),
+    ) {
+        SegmentoBotao(rotuloA, aSelecionado, onA, Modifier.weight(1f))
+        SegmentoBotao(rotuloB, !aSelecionado, onB, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun SegmentoBotao(rotulo: String, on: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier.clip(RoundedCornerShape(10.dp))
+            .then(if (on) Modifier.background(Brush.horizontalGradient(FiapGradiente)) else Modifier)
+            .clickableSemRipple(onClick)
+            .padding(vertical = 9.dp),
+        contentAlignment = Alignment.Center,
+    ) { Text(rotulo, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (on) Color.White else corMuted()) }
+}
+
+// FAB redondo só com ícone, gradiente — usado em Anotações e Grupos.
+@Composable
+fun FabRedondo(icone: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier.size(58.dp).clip(RoundedCornerShape(20.dp)).background(Brush.linearGradient(FiapGradiente))
+            .clickableSemRipple(onClick),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icone, null, tint = Color.White, modifier = Modifier.size(26.dp)) }
+}
+
+// Borda tracejada — usada na dropzone de upload de Materiais.
+fun Modifier.bordaTracejada(cor: Color, raio: Dp = 18.dp) = this.drawWithContent {
+    drawContent()
+    val stroke = Stroke(width = 1.6.dp.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 8f)))
+    drawRoundRect(cor, style = stroke, cornerRadius = androidx.compose.ui.geometry.CornerRadius(raio.toPx()))
+}
 
 @Composable
 fun Avatar(nome: String, usuarioId: Int, foto: String?, token: String?, tamanho: Int = 40) {
