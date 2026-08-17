@@ -1,17 +1,28 @@
 package tech.pervian.fiapestudante.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,89 +38,169 @@ fun AnotacoesScreen(api: Api, sessao: Sessao, disc: String) {
     var aba by remember { mutableStateOf("minhas") }
     var dados by remember { mutableStateOf<RespNotas?>(null) }
     var criando by remember { mutableStateOf(false) }
+    var notaEditando by remember { mutableStateOf<NotaApp?>(null) }
+    var notaApagando by remember { mutableStateOf<NotaApp?>(null) }
     val escopo = rememberCoroutineScope()
 
     suspend fun recarregar() { dados = runCatching { api.notas(aba, disc) }.getOrNull() }
     LaunchedEffect(aba) { recarregar() }
 
-    Scaffold(
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { criando = true }, containerColor = FiapMagenta, contentColor = Color.White,
-                icon = { Icon(Icons.Filled.Add, null) }, text = { Text("Anotar") },
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
+            SegmentoDuplo(
+                "Minhas" + (dados?.let { if (aba == "minhas") " · ${it.notas.size}" else "" } ?: ""),
+                "Da turma" + (dados?.let { if (aba == "turma") " · ${it.notas.size}" else "" } ?: ""),
+                aSelecionado = aba == "minhas",
+                onA = { aba = "minhas" }, onB = { aba = "turma" },
+                modifier = Modifier.fillMaxWidth().padding(16.dp, 16.dp, 16.dp, 4.dp),
             )
-        },
-    ) { pad ->
-        Column(Modifier.fillMaxSize().padding(pad)) {
-            Text("Anotações", fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 8.dp))
-            TabRow(selectedTabIndex = if (aba == "minhas") 0 else 1, containerColor = Color.Transparent, contentColor = FiapMagenta) {
-                Tab(selected = aba == "minhas", onClick = { aba = "minhas" }, text = { Text("Minhas") })
-                Tab(selected = aba == "turma", onClick = { aba = "turma" }, text = { Text("Da turma") })
-            }
             val d = dados
             if (d == null) { CarregandoLista(); return@Column }
             if (d.notas.isEmpty()) {
                 CentroTexto(if (aba == "minhas") "Você ainda não tem anotações." else "Ninguém compartilhou anotações ainda.")
                 return@Column
             }
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp)) {
-                items(d.notas) { n ->
-                    Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                        Column(Modifier.padding(14.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Avatar(n.autor, n.usuario_id, n.autor_foto, sessao.token, 22)
-                                Spacer(Modifier.width(6.dp))
-                                Text(if (n.usuario_id == d.euId) "você" else n.autor.split(" ").first(), fontSize = 12.sp, color = Color.Gray)
-                                Spacer(Modifier.width(6.dp))
-                                Icon(if (n.publica) Icons.Filled.Public else Icons.Filled.Lock, null, tint = Color.Gray, modifier = Modifier.size(12.dp))
-                                Spacer(Modifier.weight(1f))
-                                if (n.usuario_id == d.euId) {
-                                    IconButton(onClick = { escopo.launch { runCatching { api.apagarNota(n.id) }; recarregar() } }, modifier = Modifier.size(28.dp)) {
-                                        Icon(Icons.Outlined.DeleteOutline, "Apagar", tint = Color.Gray, modifier = Modifier.size(18.dp))
-                                    }
-                                }
-                            }
-                            if (n.titulo.isNotEmpty()) { Spacer(Modifier.height(4.dp)); Text(n.titulo, fontWeight = FontWeight.SemiBold) }
-                            Spacer(Modifier.height(2.dp))
-                            Text(n.corpo, fontSize = 14.sp)
-                        }
-                    }
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                itemsIndexed(d.notas) { i, n ->
+                    CartaoPostit(
+                        n, i, souAutor = n.usuario_id == d.euId, sessao,
+                        onClicar = { if (n.usuario_id == d.euId) notaEditando = n },
+                        onApagar = { notaApagando = n },
+                    )
                 }
             }
         }
+        FabRedondo(Icons.Filled.Add, onClick = { criando = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp))
     }
 
     if (criando) {
-        var titulo by remember { mutableStateOf("") }
-        var corpo by remember { mutableStateOf("") }
-        var publica by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { criando = false },
-            confirmButton = {
-                TextButton(
-                    enabled = corpo.trim().isNotEmpty(),
-                    onClick = {
-                        escopo.launch {
-                            runCatching { api.criarNota(corpo, titulo, publica, disc) }
-                            criando = false; aba = "minhas"; recarregar()
-                        }
-                    },
-                ) { Text("Salvar", color = FiapMagenta, fontWeight = FontWeight.Bold) }
-            },
-            dismissButton = { TextButton(onClick = { criando = false }) { Text("Cancelar") } },
-            title = { Text("Nova anotação") },
-            text = {
-                Column {
-                    OutlinedTextField(titulo, { titulo = it.take(160) }, label = { Text("Título (opcional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(corpo, { corpo = it }, label = { Text("Escreva aqui…") }, modifier = Modifier.fillMaxWidth().height(120.dp))
-                    Spacer(Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(publica, { publica = it }, colors = CheckboxDefaults.colors(checkedColor = FiapMagenta))
-                        Text("Compartilhar com a turma", fontSize = 13.sp)
-                    }
+        PopupEditorNota(
+            titulo = "Nova anotação",
+            subtitulo = "Guarde o que aprendeu, compartilhe se quiser.",
+            inicial = null,
+            onFechar = { criando = false },
+            onSalvar = { corpo, tit, publica ->
+                escopo.launch {
+                    runCatching { api.criarNota(corpo, tit, publica, disc) }
+                    criando = false; aba = "minhas"; recarregar()
                 }
             },
+        )
+    }
+
+    notaEditando?.let { n ->
+        PopupEditorNota(
+            titulo = "Editar anotação",
+            subtitulo = "Ajuste o que quiser.",
+            inicial = n,
+            onFechar = { notaEditando = null },
+            onSalvar = { corpo, tit, publica ->
+                escopo.launch {
+                    runCatching { api.editarNota(n.id, corpo, tit, publica) }
+                    notaEditando = null; recarregar()
+                }
+            },
+        )
+    }
+
+    notaApagando?.let { n ->
+        PopupPadrao(
+            icone = Icons.Filled.DeleteOutline,
+            titulo = "Apagar anotação?",
+            subtitulo = "Essa ação não pode ser desfeita.",
+            onFechar = { notaApagando = null },
+            textoConfirmar = "Apagar",
+            perigoso = true,
+            onConfirmar = {
+                escopo.launch { runCatching { api.apagarNota(n.id) }; notaApagando = null; recarregar() }
+            },
+        ) {
+            Text(
+                if (n.titulo.isNotEmpty()) n.titulo else n.corpo.take(80),
+                fontSize = 14.sp, color = corMuted(), maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PopupEditorNota(
+    titulo: String,
+    subtitulo: String,
+    inicial: NotaApp?,
+    onFechar: () -> Unit,
+    onSalvar: (corpo: String, titulo: String, publica: Boolean) -> Unit,
+) {
+    var tit by remember { mutableStateOf(inicial?.titulo ?: "") }
+    var corpo by remember { mutableStateOf(inicial?.corpo ?: "") }
+    var publica by remember { mutableStateOf(inicial?.publica ?: false) }
+    PopupPadrao(
+        icone = Icons.Filled.Edit,
+        titulo = titulo,
+        subtitulo = subtitulo,
+        onFechar = onFechar,
+        textoConfirmar = "Salvar",
+        confirmarHabilitado = corpo.trim().isNotEmpty(),
+        onConfirmar = { onSalvar(corpo, tit, publica) },
+    ) {
+        CampoPadrao(tit, { tit = it.take(160) }, label = "Título (opcional)", icone = Icons.Filled.Edit, placeholder = "Ex.: Variáveis e tipos")
+        CampoPadrao(corpo, { corpo = it }, label = "Anotação", icone = Icons.AutoMirrored.Filled.EventNote, placeholder = "Escreva aqui…", linhaUnica = false, minAltura = 100.dp)
+        CheckboxPadrao(publica, { publica = it }, "Compartilhar com a turma")
+    }
+}
+
+@Composable
+private fun CartaoPostit(n: NotaApp, indice: Int, souAutor: Boolean, sessao: Sessao, onClicar: () -> Unit, onApagar: () -> Unit) {
+    val cor = coresPostit[indice % coresPostit.size]
+    val textoEscuro = Color(0xFF2B2B2B)
+    Box(Modifier.fillMaxWidth()) {
+        Column(
+            Modifier.fillMaxWidth()
+                .rotate(if (indice % 2 == 0) -1.4f else 1.6f)
+                .shadow(8.dp, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 14.dp, bottomEnd = 14.dp), ambientColor = Color(0x66603C14), spotColor = Color(0x66603C14))
+                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 14.dp, bottomEnd = 14.dp))
+                .background(cor)
+                .clickable(onClick = onClicar)
+                .padding(top = 20.dp, start = 14.dp, end = 14.dp, bottom = 14.dp),
+        ) {
+            if (n.titulo.isNotEmpty()) Text(n.titulo, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textoEscuro)
+            Text(
+                n.corpo, fontSize = 12.sp, lineHeight = 16.sp, color = textoEscuro.copy(alpha = 0.82f),
+                maxLines = 5, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Avatar(n.autor, n.usuario_id, n.autor_foto, sessao.token, 18)
+                Spacer(Modifier.width(5.dp))
+                Text(if (souAutor) "você" else n.autor.split(" ").first(), fontSize = 10.5.sp, color = textoEscuro.copy(alpha = 0.65f))
+                Spacer(Modifier.width(5.dp))
+                Icon(if (n.publica) Icons.Filled.Public else Icons.Filled.Lock, null, tint = textoEscuro.copy(alpha = 0.5f), modifier = Modifier.size(11.dp))
+                Spacer(Modifier.weight(1f))
+                if (souAutor) {
+                    Box(
+                        Modifier.size(26.dp).clip(CircleShape).clickable(onClick = onApagar),
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(Icons.Filled.DeleteOutline, "Apagar", tint = textoEscuro.copy(alpha = 0.5f), modifier = Modifier.size(15.dp)) }
+                }
+            }
+        }
+        Box(
+            Modifier.size(14.dp).align(Alignment.TopCenter).offset(y = (-7).dp)
+                .shadow(3.dp, CircleShape, clip = false)
+                .clip(CircleShape)
+                .background(
+                    androidx.compose.ui.graphics.Brush.radialGradient(
+                        colors = listOf(Color(0xFFFF7A8A), Color(0xFFD21F3C)),
+                        center = androidx.compose.ui.geometry.Offset(13f, 11f),
+                        radius = 20f,
+                    ),
+                ),
         )
     }
 }

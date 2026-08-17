@@ -115,7 +115,7 @@ export function FormUpload({
           const f = e.dataTransfer.files?.[0]
           if (f) setArquivo(f)
         }}
-        className="painel flex cursor-pointer items-center gap-4 p-5 transition-colors"
+        className="painel flex cursor-pointer flex-wrap items-center gap-4 p-5 transition-colors"
         style={{ borderStyle: 'dashed', borderWidth: 2, borderColor: arrastando ? '#ed145b' : 'rgba(229,17,95,.35)' }}
       >
         <input
@@ -126,34 +126,38 @@ export function FormUpload({
           className="hidden"
           onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
         />
-        <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl border border-fiap-500/20 bg-fiap-500/12 text-fiap-500">
-          <ArrowUp size={22} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <b className="text-[15px]">
-            {arquivo ? arquivo.name : 'Arraste arquivos aqui ou clique para enviar'}
-          </b>
-          <p className="mt-0.5 text-sm suave">
-            {arquivo ? `pronto para enviar` : 'PDF, txt, csv, xlsx, py — até 25 MB por arquivo'}
-          </p>
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl border border-fiap-500/20 bg-fiap-500/12 text-fiap-500">
+            <ArrowUp size={22} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <b className="text-[15px]">
+              {arquivo ? arquivo.name : 'Arraste arquivos aqui ou clique para enviar'}
+            </b>
+            <p className="mt-0.5 text-sm suave">
+              {arquivo ? `pronto para enviar` : 'PDF, txt, csv, xlsx, py — até 25 MB por arquivo'}
+            </p>
+          </div>
         </div>
-        <label
-          className="inline-flex shrink-0 cursor-pointer items-center gap-2 text-sm suave"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <input type="checkbox" name="publico" value="privado" className="accent-fiap-500" />
-          Manter privado
-        </label>
-        <Botao
-          type="button"
-          tamanho="sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            inputArquivo.current?.click()
-          }}
-        >
-          Selecionar arquivo
-        </Botao>
+        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
+          <label
+            className="inline-flex shrink-0 cursor-pointer items-center gap-2 text-sm suave"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input type="checkbox" name="publico" value="privado" className="accent-fiap-500" />
+            Manter privado
+          </label>
+          <Botao
+            type="button"
+            tamanho="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              inputArquivo.current?.click()
+            }}
+          >
+            Selecionar arquivo
+          </Botao>
+        </div>
       </div>
 
       {arquivo && (
