@@ -1,6 +1,7 @@
 package tech.pervian.fiapestudante.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -11,10 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +38,8 @@ fun AnotacoesScreen(api: Api, sessao: Sessao, disc: String) {
     var aba by remember { mutableStateOf("minhas") }
     var dados by remember { mutableStateOf<RespNotas?>(null) }
     var criando by remember { mutableStateOf(false) }
+    var notaEditando by remember { mutableStateOf<NotaApp?>(null) }
+    var notaApagando by remember { mutableStateOf<NotaApp?>(null) }
     val escopo = rememberCoroutineScope()
 
     suspend fun recarregar() { dados = runCatching { api.notas(aba, disc) }.getOrNull() }
@@ -63,39 +66,96 @@ fun AnotacoesScreen(api: Api, sessao: Sessao, disc: String) {
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                itemsIndexed(d.notas) { i, n -> CartaoPostit(n, i, souAutor = n.usuario_id == d.euId, sessao) { escopo.launch { runCatching { api.apagarNota(n.id) }; recarregar() } } }
+                itemsIndexed(d.notas) { i, n ->
+                    CartaoPostit(
+                        n, i, souAutor = n.usuario_id == d.euId, sessao,
+                        onClicar = { if (n.usuario_id == d.euId) notaEditando = n },
+                        onApagar = { notaApagando = n },
+                    )
+                }
             }
         }
         FabRedondo(Icons.Filled.Add, onClick = { criando = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp))
     }
 
     if (criando) {
-        var titulo by remember { mutableStateOf("") }
-        var corpo by remember { mutableStateOf("") }
-        var publica by remember { mutableStateOf(false) }
-        PopupPadrao(
-            icone = Icons.Filled.Edit,
+        PopupEditorNota(
             titulo = "Nova anotação",
             subtitulo = "Guarde o que aprendeu, compartilhe se quiser.",
+            inicial = null,
             onFechar = { criando = false },
-            textoConfirmar = "Salvar",
-            confirmarHabilitado = corpo.trim().isNotEmpty(),
-            onConfirmar = {
+            onSalvar = { corpo, tit, publica ->
                 escopo.launch {
-                    runCatching { api.criarNota(corpo, titulo, publica, disc) }
+                    runCatching { api.criarNota(corpo, tit, publica, disc) }
                     criando = false; aba = "minhas"; recarregar()
                 }
             },
+        )
+    }
+
+    notaEditando?.let { n ->
+        PopupEditorNota(
+            titulo = "Editar anotação",
+            subtitulo = "Ajuste o que quiser.",
+            inicial = n,
+            onFechar = { notaEditando = null },
+            onSalvar = { corpo, tit, publica ->
+                escopo.launch {
+                    runCatching { api.editarNota(n.id, corpo, tit, publica) }
+                    notaEditando = null; recarregar()
+                }
+            },
+        )
+    }
+
+    notaApagando?.let { n ->
+        PopupPadrao(
+            icone = Icons.Filled.DeleteOutline,
+            titulo = "Apagar anotação?",
+            subtitulo = "Essa ação não pode ser desfeita.",
+            onFechar = { notaApagando = null },
+            textoConfirmar = "Apagar",
+            perigoso = true,
+            onConfirmar = {
+                escopo.launch { runCatching { api.apagarNota(n.id) }; notaApagando = null; recarregar() }
+            },
         ) {
-            CampoPadrao(titulo, { titulo = it.take(160) }, label = "Título (opcional)", icone = Icons.Filled.Edit, placeholder = "Ex.: Variáveis e tipos")
-            CampoPadrao(corpo, { corpo = it }, label = "Anotação", icone = Icons.AutoMirrored.Filled.EventNote, placeholder = "Escreva aqui…", linhaUnica = false, minAltura = 100.dp)
-            CheckboxPadrao(publica, { publica = it }, "Compartilhar com a turma")
+            Text(
+                if (n.titulo.isNotEmpty()) n.titulo else n.corpo.take(80),
+                fontSize = 14.sp, color = corMuted(), maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
         }
     }
 }
 
 @Composable
-private fun CartaoPostit(n: NotaApp, indice: Int, souAutor: Boolean, sessao: Sessao, onApagar: () -> Unit) {
+private fun PopupEditorNota(
+    titulo: String,
+    subtitulo: String,
+    inicial: NotaApp?,
+    onFechar: () -> Unit,
+    onSalvar: (corpo: String, titulo: String, publica: Boolean) -> Unit,
+) {
+    var tit by remember { mutableStateOf(inicial?.titulo ?: "") }
+    var corpo by remember { mutableStateOf(inicial?.corpo ?: "") }
+    var publica by remember { mutableStateOf(inicial?.publica ?: false) }
+    PopupPadrao(
+        icone = Icons.Filled.Edit,
+        titulo = titulo,
+        subtitulo = subtitulo,
+        onFechar = onFechar,
+        textoConfirmar = "Salvar",
+        confirmarHabilitado = corpo.trim().isNotEmpty(),
+        onConfirmar = { onSalvar(corpo, tit, publica) },
+    ) {
+        CampoPadrao(tit, { tit = it.take(160) }, label = "Título (opcional)", icone = Icons.Filled.Edit, placeholder = "Ex.: Variáveis e tipos")
+        CampoPadrao(corpo, { corpo = it }, label = "Anotação", icone = Icons.AutoMirrored.Filled.EventNote, placeholder = "Escreva aqui…", linhaUnica = false, minAltura = 100.dp)
+        CheckboxPadrao(publica, { publica = it }, "Compartilhar com a turma")
+    }
+}
+
+@Composable
+private fun CartaoPostit(n: NotaApp, indice: Int, souAutor: Boolean, sessao: Sessao, onClicar: () -> Unit, onApagar: () -> Unit) {
     val cor = coresPostit[indice % coresPostit.size]
     val textoEscuro = Color(0xFF2B2B2B)
     Box(Modifier.fillMaxWidth()) {
@@ -105,6 +165,7 @@ private fun CartaoPostit(n: NotaApp, indice: Int, souAutor: Boolean, sessao: Ses
                 .shadow(8.dp, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 14.dp, bottomEnd = 14.dp), ambientColor = Color(0x66603C14), spotColor = Color(0x66603C14))
                 .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 14.dp, bottomEnd = 14.dp))
                 .background(cor)
+                .clickable(onClick = onClicar)
                 .padding(top = 20.dp, start = 14.dp, end = 14.dp, bottom = 14.dp),
         ) {
             if (n.titulo.isNotEmpty()) Text(n.titulo, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textoEscuro)
@@ -122,10 +183,10 @@ private fun CartaoPostit(n: NotaApp, indice: Int, souAutor: Boolean, sessao: Ses
                 Icon(if (n.publica) Icons.Filled.Public else Icons.Filled.Lock, null, tint = textoEscuro.copy(alpha = 0.5f), modifier = Modifier.size(11.dp))
                 Spacer(Modifier.weight(1f))
                 if (souAutor) {
-                    Icon(
-                        Icons.Outlined.DeleteOutline, "Apagar", tint = textoEscuro.copy(alpha = 0.5f),
-                        modifier = Modifier.size(15.dp).clickableSemRipple(onApagar),
-                    )
+                    Box(
+                        Modifier.size(26.dp).clip(CircleShape).clickable(onClick = onApagar),
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(Icons.Filled.DeleteOutline, "Apagar", tint = textoEscuro.copy(alpha = 0.5f), modifier = Modifier.size(15.dp)) }
                 }
             }
         }

@@ -164,6 +164,10 @@ class Api(private val sessao: Sessao) {
         val body = JSON.encodeToString(mapOf("id" to id)).toRequestBody(JSON_MEDIA)
         cliente.newCall(req("/api/mobile/notas/apagar").post(body).build()).execute().close()
     }
+    suspend fun editarNota(id: Int, corpo: String, titulo: String, publica: Boolean): Unit = withContext(Dispatchers.IO) {
+        val body = JSON.encodeToString(NotaEditada(id, corpo, titulo, publica)).toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/notas/editar").post(body).build()).execute().close()
+    }
     suspend fun materiais(aba: String, disc: String): RespMateriais = get("/api/mobile/materiais?aba=$aba&disciplina=$disc")
 
     suspend fun enviarMaterial(nome: String, mime: String, bytes: ByteArray, descricao: String, publico: Boolean, disc: String): Boolean =

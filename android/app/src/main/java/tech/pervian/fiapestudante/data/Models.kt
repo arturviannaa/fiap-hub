@@ -215,6 +215,9 @@ data class RespNotas(val notas: List<NotaApp> = emptyList(), val euId: Int = 0)
 data class NovaNota(val corpo: String, val titulo: String = "", val publica: Boolean = false, val disciplina: String = "python")
 
 @Serializable
+data class NotaEditada(val id: Int, val corpo: String, val titulo: String = "", val publica: Boolean = false)
+
+@Serializable
 data class MaterialApp(
     val id: Int,
     val nome: String,

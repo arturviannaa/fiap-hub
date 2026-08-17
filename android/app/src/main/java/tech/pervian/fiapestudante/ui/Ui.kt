@@ -86,13 +86,13 @@ fun GlassCard(modifier: Modifier = Modifier, padding: Dp = 16.dp, content: @Comp
 
 // Botão principal cheio, gradiente rosa->magenta — usado em CTAs de destaque.
 @Composable
-fun BotaoGradiente(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
+fun BotaoGradiente(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, cores: List<Color> = FiapGradiente, onClick: () -> Unit) {
     Box(
         modifier
             .fillMaxWidth()
             .height(50.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(if (habilitado) Brush.horizontalGradient(FiapGradiente) else Brush.horizontalGradient(listOf(Color.Gray, Color.Gray)))
+            .background(if (habilitado) Brush.horizontalGradient(cores) else Brush.horizontalGradient(listOf(Color.Gray, Color.Gray)))
             .then(if (habilitado) Modifier.clickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) { Text(texto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
