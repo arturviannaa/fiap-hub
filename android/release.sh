@@ -13,8 +13,8 @@ URL="${URL:?defina URL em .deploy-target}"
 cd "$(dirname "$0")"
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 
-VC=$(grep -oP 'versionCode = \K[0-9]+' app/build.gradle.kts)
-VN=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+VC=$(sed -nE 's/.*versionCode = ([0-9]+).*/\1/p' app/build.gradle.kts)
+VN=$(sed -nE 's/.*versionName = "([^"]+)".*/\1/p' app/build.gradle.kts)
 OBRIGATORIO="${OBRIGATORIO:-false}"
 
 echo "== build v$VN (code $VC) =="
