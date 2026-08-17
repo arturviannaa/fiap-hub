@@ -3,12 +3,9 @@ package tech.pervian.fiapestudante.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +19,6 @@ import tech.pervian.fiapestudante.data.Api
 import tech.pervian.fiapestudante.data.RespGrupos
 import tech.pervian.fiapestudante.data.Sessao
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GruposScreen(api: Api, sessao: Sessao, onAbrirGrupo: (Int) -> Unit) {
     var dados by remember { mutableStateOf<RespGrupos?>(null) }
@@ -33,53 +29,44 @@ fun GruposScreen(api: Api, sessao: Sessao, onAbrirGrupo: (Int) -> Unit) {
     LaunchedEffect(Unit) { recarregar() }
 
     val d = dados
-    Scaffold(
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { criando = true },
-                containerColor = FiapMagenta, contentColor = Color.White,
-                icon = { Icon(Icons.Filled.Add, null) }, text = { Text("Novo grupo") },
-            )
-        },
-    ) { pad ->
-        if (d == null) { Carregando(); return@Scaffold }
-        LazyColumn(Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(16.dp)) {
-            item {
-                Text("Grupos", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("Espaços privados da turma", color = Color.Gray, fontSize = 13.sp)
-                Spacer(Modifier.height(12.dp))
-            }
-            if (d.grupos.isEmpty()) {
-                item { Text("Você ainda não está em nenhum grupo. Crie um!", color = Color.Gray, modifier = Modifier.padding(top = 40.dp)) }
-            }
-            items(d.grupos) { g ->
-                Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-                    Column(Modifier.padding(16.dp)) {
+    Box(Modifier.fillMaxSize()) {
+        if (d == null) { Carregando() } else {
+            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 96.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                item {
+                    Text("Grupos", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("Espaços privados da turma", color = corMuted(), fontSize = 13.sp)
+                }
+                if (d.grupos.isEmpty()) {
+                    item { Text("Você ainda não está em nenhum grupo. Crie um!", color = corMuted(), modifier = Modifier.padding(top = 24.dp)) }
+                }
+                items(d.grupos) { g ->
+                    val cor = cores[((g.id.let { if (it < 0) -it else it }) % cores.size)]
+                    GlassCard(Modifier.fillMaxWidth(), padding = 18.dp) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Lock, null, tint = FiapMagenta, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(g.nome, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                            Text("${g.membros} membros", fontSize = 12.sp, color = Color.Gray)
-                        }
-                        if (g.descricao.isNotEmpty()) {
-                            Spacer(Modifier.height(4.dp)); Text(g.descricao, fontSize = 13.sp, color = Color.Gray)
+                            IconeCaixa(Icons.Filled.Groups, cor = cor)
+                            Spacer(Modifier.weight(1f))
+                            Text("${g.membros} ${if (g.membros == 1) "membro" else "membros"}", fontSize = 12.sp, color = corMuted())
                         }
                         Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = { onAbrirGrupo(g.id) },
-                                colors = ButtonDefaults.buttonColors(containerColor = FiapMagenta),
-                                modifier = Modifier.weight(1f),
-                            ) { Text("Abrir chat") }
-                            OutlinedButton(
-                                onClick = { escopo.launch { runCatching { api.sairGrupo(g.id) }; recarregar() } },
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
-                            ) { Icon(Icons.Filled.Logout, null, Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text("Sair") }
+                        Text(g.nome, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        if (g.descricao.isNotEmpty()) {
+                            Spacer(Modifier.height(3.dp))
+                            Text(g.descricao, fontSize = 13.sp, color = corMuted())
                         }
+                        Spacer(Modifier.height(14.dp))
+                        BotaoGradiente("Abrir chat", onClick = { onAbrirGrupo(g.id) })
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Sair do grupo", fontSize = 12.sp, color = Color(0xFFEF4444),
+                            modifier = Modifier.clickableSemRipple {
+                                escopo.launch { runCatching { api.sairGrupo(g.id) }; recarregar() }
+                            }.padding(vertical = 4.dp),
+                        )
                     }
                 }
             }
         }
+        FabRedondo(Icons.Filled.Add, onClick = { criando = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp))
     }
 
     if (criando && d != null) {
