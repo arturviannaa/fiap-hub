@@ -9,13 +9,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -50,7 +55,67 @@ import tech.pervian.fiapestudante.data.BASE_URL
 
 val FiapMagenta = Color(0xFFED145B)
 val FiapRosa = Color(0xFFFB7099)
-val FiapGradiente = listOf(FiapMagenta, FiapRosa)
+val FiapGradiente = listOf(FiapRosa, FiapMagenta)
+
+// Tokens "glass" — mesmos valores do --painel/--borda/--texto-2 do web (globals.css).
+@Composable fun corFundo() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0xFF0E0F10) else Color(0xFFF2F0EE)
+@Composable fun corPainel() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0x99181818) else Color(0x8CFFFFFF)
+@Composable fun corBorda() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0x24ACC1CC) else Color(0x1414101E)
+@Composable fun corMuted() = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0xFFBDBFC7) else Color(0xFF7A7280)
+
+// Painel de vidro: fundo translúcido + borda fina, a base visual de todo o novo design.
+@Composable
+fun GlassCard(modifier: Modifier = Modifier, padding: Dp = 16.dp, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(corPainel())
+            .border(androidx.compose.foundation.BorderStroke(1.dp, corBorda()), RoundedCornerShape(20.dp))
+            .padding(padding),
+        content = content,
+    )
+}
+
+// Botão principal cheio, gradiente rosa->magenta — usado em CTAs de destaque.
+@Composable
+fun BotaoGradiente(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (habilitado) Brush.horizontalGradient(FiapGradiente) else Brush.horizontalGradient(listOf(Color.Gray, Color.Gray)))
+            .then(if (habilitado) Modifier.clickable(onClick = onClick) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) { Text(texto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
+}
+
+// Barra de progresso linear com trilho neutro e preenchimento em gradiente.
+@Composable
+fun BarraProgressoLinear(pct: Float, modifier: Modifier = Modifier) {
+    val alvo = pct.coerceIn(0f, 1f)
+    val anim by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = alvo, animationSpec = tween(700), label = "barra",
+    )
+    Box(
+        modifier.fillMaxWidth().height(9.dp).clip(RoundedCornerShape(7.dp)).background(corBorda().copy(alpha = 0.5f)),
+    ) {
+        Box(
+            Modifier.fillMaxHeight().fillMaxWidth(anim).clip(RoundedCornerShape(7.dp))
+                .background(Brush.horizontalGradient(FiapGradiente)),
+        )
+    }
+}
+
+// Ícone dentro de caixa arredondada colorida — usado em módulos, grupos e tipos de arquivo.
+@Composable
+fun IconeCaixa(icone: ImageVector, cor: Color = FiapMagenta, tamanho: Dp = 40.dp) {
+    Box(
+        Modifier.size(tamanho).clip(RoundedCornerShape(12.dp)).background(cor.copy(alpha = 0.12f))
+            .border(androidx.compose.foundation.BorderStroke(1.dp, cor.copy(alpha = 0.18f)), RoundedCornerShape(12.dp)),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icone, null, tint = cor, modifier = Modifier.size(tamanho * 0.48f)) }
+}
 
 private val cores = listOf(
     0xFFED145B, 0xFF7C5CFF, 0xFF0EA5E9, 0xFF10B981, 0xFFF59E0B, 0xFFEF4444, 0xFF8B5CF6, 0xFF14B8A6,
