@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
@@ -94,39 +95,27 @@ private fun DialogNovoGrupo(
     var desc by remember { mutableStateOf("") }
     val selecionados = remember { mutableStateListOf<Int>() }
 
-    AlertDialog(
-        onDismissRequest = onCancelar,
-        confirmButton = {
-            TextButton(
-                onClick = { onCriar(nome, desc, selecionados.toList()) },
-                enabled = nome.trim().length >= 2,
-            ) { Text("Criar", color = FiapMagenta, fontWeight = FontWeight.Bold) }
-        },
-        dismissButton = { TextButton(onClick = onCancelar) { Text("Cancelar") } },
-        title = { Text("Novo grupo") },
-        text = {
-            Column {
-                OutlinedTextField(nome, { nome = it.take(60) }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(desc, { desc = it.take(160) }, label = { Text("Descrição (opcional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(12.dp))
-                Text("Quem participa", fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                LazyColumn(Modifier.heightIn(max = 240.dp)) {
-                    items(turma) { p ->
-                        Row(
-                            Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Checkbox(
-                                checked = p.id in selecionados,
-                                onCheckedChange = { if (it) selecionados.add(p.id) else selecionados.remove(p.id) },
-                                colors = CheckboxDefaults.colors(checkedColor = FiapMagenta),
-                            )
-                            Text(p.nome, fontSize = 14.sp)
-                        }
-                    }
-                }
+    PopupPadrao(
+        icone = Icons.Filled.Lock,
+        titulo = "Novo grupo",
+        subtitulo = "Espaço privado só pra quem você chamar.",
+        onFechar = onCancelar,
+        textoConfirmar = "Criar",
+        confirmarHabilitado = nome.trim().length >= 2,
+        onConfirmar = { onCriar(nome, desc, selecionados.toList()) },
+    ) {
+        CampoPadrao(nome, { nome = it.take(60) }, label = "Nome", icone = Icons.Filled.Lock, placeholder = "Ex.: Hackers da FIAP")
+        CampoPadrao(desc, { desc = it.take(160) }, label = "Descrição (opcional)", icone = Icons.AutoMirrored.Filled.EventNote, placeholder = "Do que se trata")
+        Text("Quem participa", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = corMuted())
+        LazyColumn(Modifier.heightIn(max = 200.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            items(turma) { p ->
+                CheckboxPadrao(
+                    marcado = p.id in selecionados,
+                    onMudar = { if (it) selecionados.add(p.id) else selecionados.remove(p.id) },
+                    texto = p.nome,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                )
             }
-        },
-    )
+        }
+    }
 }
