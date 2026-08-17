@@ -47,11 +47,13 @@ fun PopupPadrao(
     textoCancelar: String = "Cancelar",
     textoConfirmar: String,
     confirmarHabilitado: Boolean = true,
+    perigoso: Boolean = false,
     onConfirmar: () -> Unit,
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
     Dialog(onDismissRequest = onFechar, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         val corModal = if (tech.pervian.fiapestudante.LocalTemaEscuro.current) Color(0xF0181818) else Color(0xF0FFFFFF)
+        val corAcento = if (perigoso) Color(0xFFEF4444) else FiapMagenta
         Column(
             Modifier
                 .fillMaxWidth(0.9f)
@@ -64,7 +66,7 @@ fun PopupPadrao(
             Row(verticalAlignment = Alignment.Top) {
                 Box(
                     Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
-                        .background(Brush.linearGradient(FiapGradiente)),
+                        .background(if (perigoso) Brush.linearGradient(listOf(corAcento, corAcento)) else Brush.linearGradient(FiapGradiente)),
                     contentAlignment = Alignment.Center,
                 ) { Icon(icone, null, tint = Color.White, modifier = Modifier.size(22.dp)) }
                 Spacer(Modifier.width(12.dp))
@@ -85,7 +87,11 @@ fun PopupPadrao(
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 BotaoGhost(textoCancelar, onClick = onFechar, modifier = Modifier.weight(1f))
-                BotaoGradiente(textoConfirmar, habilitado = confirmarHabilitado, onClick = onConfirmar, modifier = Modifier.weight(1f).height(50.dp))
+                BotaoGradiente(
+                    textoConfirmar, habilitado = confirmarHabilitado, onClick = onConfirmar,
+                    cores = if (perigoso) listOf(corAcento, corAcento) else FiapGradiente,
+                    modifier = Modifier.weight(1f).height(50.dp),
+                )
             }
         }
     }
