@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -137,7 +138,15 @@ private fun CartaoPostit(n: NotaApp, souAutor: Boolean, sessao: Sessao, onApagar
         }
         Box(
             Modifier.size(14.dp).align(Alignment.TopCenter).offset(y = (-7).dp)
-                .clip(CircleShape).background(Color(0xFFD21F3C)),
+                .shadow(3.dp, CircleShape, clip = false)
+                .clip(CircleShape)
+                .background(
+                    androidx.compose.ui.graphics.Brush.radialGradient(
+                        colors = listOf(Color(0xFFFF7A8A), Color(0xFFD21F3C)),
+                        center = androidx.compose.ui.geometry.Offset(13f, 11f),
+                        radius = 20f,
+                    ),
+                ),
         )
     }
 }

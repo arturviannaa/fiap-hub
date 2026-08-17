@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,7 +43,7 @@ fun GruposScreen(api: Api, sessao: Sessao, onAbrirGrupo: (Int) -> Unit) {
                     val cor = cores[((g.id.let { if (it < 0) -it else it }) % cores.size)]
                     GlassCard(Modifier.fillMaxWidth(), padding = 18.dp) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconeCaixa(Icons.Filled.Groups, cor = cor)
+                            IconeCaixa(Icons.Filled.Lock, cor = cor)
                             Spacer(Modifier.weight(1f))
                             Text("${g.membros} ${if (g.membros == 1) "membro" else "membros"}", fontSize = 12.sp, color = corMuted())
                         }

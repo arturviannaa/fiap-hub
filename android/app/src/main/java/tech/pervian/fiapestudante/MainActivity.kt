@@ -32,10 +32,11 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -152,9 +153,9 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
     val abas = listOf(
         Aba("painel", "Painel", Icons.Filled.Dashboard),
         Aba("aulas", "Aulas", Icons.AutoMirrored.Filled.MenuBook),
-        Aba("anotacoes", "Notas", Icons.AutoMirrored.Filled.EventNote),
-        Aba("materiais", "Materiais", Icons.Filled.FolderOpen),
-        Aba("grupos", "Grupos", Icons.Filled.Groups),
+        Aba("anotacoes", "Notas", Icons.Filled.Edit),
+        Aba("materiais", "Materiais", Icons.Filled.Description),
+        Aba("grupos", "Grupos", Icons.Filled.Lock),
     )
 
     LaunchedEffect(Unit) { Push.registrar(ctx) }
