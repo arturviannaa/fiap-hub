@@ -11,21 +11,33 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.EventNote
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -79,7 +91,7 @@ class MainActivity : ComponentActivity() {
 
             val esquema = if (escuro) darkColorScheme(
                 primary = FiapMagenta,
-                background = Color(0xFF0B0C10),
+                background = Color(0xFF0E0F10),
                 surface = Color(0xFF15171E),
                 surfaceVariant = Color(0xFF20232C),
                 onBackground = Color(0xFFECEEF4),
@@ -87,7 +99,7 @@ class MainActivity : ComponentActivity() {
                 onSurfaceVariant = Color(0xFFB6BAC6),
             ) else lightColorScheme(
                 primary = FiapMagenta,
-                background = Color(0xFFF7F8FA),
+                background = Color(0xFFF2F0EE),
                 surface = Color(0xFFFFFFFF),
                 surfaceVariant = Color(0xFFEEF0F4),
             )
@@ -134,13 +146,12 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
     val ctx = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val abas = listOf(
+        Aba("painel", "Painel", Icons.Filled.Dashboard),
         Aba("aulas", "Aulas", Icons.AutoMirrored.Filled.MenuBook),
         Aba("anotacoes", "Notas", Icons.AutoMirrored.Filled.EventNote),
         Aba("materiais", "Materiais", Icons.Filled.FolderOpen),
-        Aba("chat", "Chat", Icons.Filled.Chat),
-        Aba("grupos", "Grupos", Icons.Filled.Lock),
+        Aba("grupos", "Grupos", Icons.Filled.Groups),
     )
-    val eu = sessao.usuario
 
     LaunchedEffect(Unit) { Push.registrar(ctx) }
     LaunchedEffect(Unit) { while (isActive) { api.heartbeat(); delay(45_000) } }
@@ -177,61 +188,37 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
         }
     }
 
+    val atual = nav.currentBackStackEntryAsState().value?.destination?.route?.substringBefore("/")
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    androidx.compose.foundation.layout.Column(
-                        modifier = Modifier.clickableSemRipple { onTrocarDisciplina() }
-                    ) {
-                        Text(sessao.disciplinaCurto ?: "FIAP Estudante", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = 16.sp)
-                        Text("trocar disciplina", fontSize = 10.sp, color = FiapMagenta)
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { nav.navigate("perfil") }) {
-                        Avatar(eu?.nome ?: "", eu?.id ?: 0, eu?.foto, sessao.token, 30)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { nav.navigate("turma") }) { Icon(Icons.Filled.Groups, "Turma") }
-                    IconButton(onClick = { nav.navigate("notif") }) {
-                        BadgedBox(badge = { if (naoLidas > 0) Badge { Text("$naoLidas") } }) {
-                            Icon(Icons.Filled.Notifications, "Notificações")
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(titleContentColor = FiapMagenta),
+            CabecalhoApp(
+                tituloTela = abas.find { it.rota == atual }?.rotulo ?: (sessao.disciplinaCurto ?: "FIAP Estudante"),
+                subDisciplina = sessao.disciplinaCurto ?: "",
+                naoLidas = naoLidas,
+                onLogo = { nav.navigate("perfil") },
+                onTurma = { nav.navigate("turma") },
+                onNotif = { nav.navigate("notif") },
+                onTrocarDisciplina = onTrocarDisciplina,
             )
         },
         bottomBar = {
-            val atual = nav.currentBackStackEntryAsState().value?.destination?.route?.substringBefore("/")
-            NavigationBar {
-                abas.forEach { aba ->
-                    NavigationBarItem(
-                        selected = atual == aba.rota,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            nav.navigate(aba.rota) { popUpTo("aulas"); launchSingleTop = true }
-                        },
-                        icon = { Icon(aba.icone, aba.rotulo) },
-                        label = { Text(aba.rotulo, fontSize = androidx.compose.ui.unit.TextUnit.Unspecified) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = FiapMagenta, selectedTextColor = FiapMagenta,
-                            indicatorColor = FiapMagenta.copy(alpha = 0.12f),
-                        ),
-                    )
-                }
+            BarraAbas(abas, atual) { rota ->
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                nav.navigate(rota) { popUpTo("painel"); launchSingleTop = true }
             }
         },
     ) { pad ->
         NavHost(
-            nav, startDestination = "aulas", modifier = Modifier.padding(pad),
+            nav, startDestination = "painel", modifier = Modifier.padding(pad),
             enterTransition = { androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(220)) + androidx.compose.animation.slideInVertically(androidx.compose.animation.core.tween(220)) { it / 14 } },
             exitTransition = { androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(160)) },
             popEnterTransition = { androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(220)) },
             popExitTransition = { androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(160)) },
         ) {
+            composable("painel") {
+                PainelScreen(api, sessao, disc, onAbrirAula = { nav.navigate("aula/$it") }, onIrAulas = { nav.navigate("aulas") { popUpTo("painel") } })
+            }
             composable("aulas") { AulasScreen(api, sessao, disc, onAbrirAula = { nav.navigate("aula/$it") }) }
             composable("aula/{slug}") {
                 AulaScreen(api, sessao, it.arguments?.getString("slug") ?: "", onVoltar = { nav.popBackStack() }, onAula = { s -> nav.navigate("aula/$s") })
@@ -259,6 +246,77 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
                     onAbrirGrupo = { nav.navigate("grupo/$it") },
                     onAbrirAula = { nav.navigate("aula/$it") },
                     onLidas = { naoLidas = 0 },
+                )
+            }
+        }
+    }
+}
+
+// Header em vidro: logo "F" (-> perfil), título da tela / disciplina (-> trocar disciplina), turma e notificações.
+@Composable
+private fun CabecalhoApp(
+    tituloTela: String, subDisciplina: String, naoLidas: Int,
+    onLogo: () -> Unit, onTurma: () -> Unit, onNotif: () -> Unit, onTrocarDisciplina: () -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth().background(corPainel())
+            .padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(38.dp).clip(RoundedCornerShape(11.dp))
+                .background(androidx.compose.ui.graphics.Brush.linearGradient(FiapGradiente))
+                .clickableSemRipple(onLogo),
+            contentAlignment = Alignment.Center,
+        ) { Text("F", color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, fontSize = 16.sp) }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f).clickableSemRipple(onTrocarDisciplina)) {
+            Text(tituloTela, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = 15.sp)
+            Text(
+                if (subDisciplina.isNotEmpty()) "$subDisciplina · Turma FIAP" else "Turma FIAP",
+                fontSize = 11.sp, color = corMuted(),
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        BotaoIb(onClick = onTurma) { Icon(Icons.Filled.Groups, "Turma", modifier = Modifier.size(18.dp)) }
+        Spacer(Modifier.width(8.dp))
+        BotaoIb(onClick = onNotif) {
+            BadgedBox(badge = { if (naoLidas > 0) Badge { Text("$naoLidas") } }) {
+                Icon(Icons.Filled.Notifications, "Notificações", modifier = Modifier.size(18.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun BotaoIb(onClick: () -> Unit, content: @Composable () -> Unit) {
+    Box(
+        Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(corPainel())
+            .border(BorderStroke(1.dp, corBorda()), RoundedCornerShape(12.dp))
+            .clickableSemRipple(onClick),
+        contentAlignment = Alignment.Center,
+    ) { content() }
+}
+
+// Tab bar em vidro: ícone + rótulo empilhados, ativo em magenta, sem indicador de fundo.
+@Composable
+private fun BarraAbas(abas: List<Aba>, atual: String?, onSelect: (String) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().background(corPainel()).padding(vertical = 10.dp, horizontal = 6.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+    ) {
+        abas.forEach { aba ->
+            val on = atual == aba.rota
+            Column(
+                Modifier.width(64.dp).clickableSemRipple { onSelect(aba.rota) },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(aba.icone, aba.rotulo, tint = if (on) FiapMagenta else corMuted(), modifier = Modifier.size(23.dp))
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    aba.rotulo, fontSize = 10.sp,
+                    fontWeight = if (on) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium,
+                    color = if (on) FiapMagenta else corMuted(),
                 )
             }
         }
