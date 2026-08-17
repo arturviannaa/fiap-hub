@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
@@ -89,6 +90,7 @@ fun MateriaisScreen(api: Api, sessao: Sessao, disc: String) {
             Column(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
+                    .background(corPainel())
                     .bordaTracejada(FiapMagenta.copy(alpha = 0.4f), 18.dp)
                     .clickable { picker.launch("*/*") }
                     .padding(vertical = 22.dp),
@@ -135,34 +137,25 @@ fun MateriaisScreen(api: Api, sessao: Sessao, disc: String) {
         var descricao by remember { mutableStateOf("") }
         var publico by remember { mutableStateOf(true) }
         var enviando by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { if (!enviando) escolhido = null },
-            confirmButton = {
-                TextButton(enabled = !enviando, onClick = {
-                    enviando = true
-                    escopo.launch {
-                        val ok = runCatching { api.enviarMaterial(a.nome, a.mime, a.bytes, descricao, publico, disc) }.getOrDefault(false)
-                        enviando = false; escolhido = null
-                        Toast.makeText(ctx, if (ok) "Material enviado!" else "Falha no envio", Toast.LENGTH_SHORT).show()
-                        if (ok) { aba = "meus"; recarregar() }
-                    }
-                }) { Text(if (enviando) "Enviando…" else "Enviar", color = FiapMagenta, fontWeight = FontWeight.Bold) }
-            },
-            dismissButton = { TextButton(enabled = !enviando, onClick = { escolhido = null }) { Text("Cancelar") } },
-            title = { Text("Enviar material") },
-            text = {
-                Column {
-                    Text(a.nome, fontWeight = FontWeight.Medium, fontSize = 14.sp)
-                    Text(tamanho(a.bytes.size.toLong()), fontSize = 12.sp, color = Color.Gray)
-                    Spacer(Modifier.height(10.dp))
-                    OutlinedTextField(descricao, { descricao = it.take(200) }, label = { Text("Descrição (opcional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(publico, { publico = it }, colors = CheckboxDefaults.colors(checkedColor = FiapMagenta))
-                        Text("Público (toda a turma vê)", fontSize = 13.sp)
-                    }
+        PopupPadrao(
+            icone = Icons.Filled.UploadFile,
+            titulo = "Enviar material",
+            subtitulo = "${a.nome} · ${tamanho(a.bytes.size.toLong())}",
+            onFechar = { if (!enviando) escolhido = null },
+            textoConfirmar = if (enviando) "Enviando…" else "Enviar",
+            confirmarHabilitado = !enviando,
+            onConfirmar = {
+                enviando = true
+                escopo.launch {
+                    val ok = runCatching { api.enviarMaterial(a.nome, a.mime, a.bytes, descricao, publico, disc) }.getOrDefault(false)
+                    enviando = false; escolhido = null
+                    Toast.makeText(ctx, if (ok) "Material enviado!" else "Falha no envio", Toast.LENGTH_SHORT).show()
+                    if (ok) { aba = "meus"; recarregar() }
                 }
             },
-        )
+        ) {
+            CampoPadrao(descricao, { descricao = it.take(200) }, label = "Descrição (opcional)", icone = Icons.Filled.Description, placeholder = "Do que se trata")
+            CheckboxPadrao(publico, { publico = it }, "Público (toda a turma vê)")
+        }
     }
 }

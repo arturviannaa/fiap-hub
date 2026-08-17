@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.outlined.DeleteOutline
@@ -61,7 +63,7 @@ fun AnotacoesScreen(api: Api, sessao: Sessao, disc: String) {
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                items(d.notas) { n -> CartaoPostit(n, souAutor = n.usuario_id == d.euId, sessao) { escopo.launch { runCatching { api.apagarNota(n.id) }; recarregar() } } }
+                itemsIndexed(d.notas) { i, n -> CartaoPostit(n, i, souAutor = n.usuario_id == d.euId, sessao) { escopo.launch { runCatching { api.apagarNota(n.id) }; recarregar() } } }
             }
         }
         FabRedondo(Icons.Filled.Add, onClick = { criando = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp))
@@ -71,45 +73,36 @@ fun AnotacoesScreen(api: Api, sessao: Sessao, disc: String) {
         var titulo by remember { mutableStateOf("") }
         var corpo by remember { mutableStateOf("") }
         var publica by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { criando = false },
-            confirmButton = {
-                TextButton(
-                    enabled = corpo.trim().isNotEmpty(),
-                    onClick = {
-                        escopo.launch {
-                            runCatching { api.criarNota(corpo, titulo, publica, disc) }
-                            criando = false; aba = "minhas"; recarregar()
-                        }
-                    },
-                ) { Text("Salvar", color = FiapMagenta, fontWeight = FontWeight.Bold) }
-            },
-            dismissButton = { TextButton(onClick = { criando = false }) { Text("Cancelar") } },
-            title = { Text("Nova anotação") },
-            text = {
-                Column {
-                    OutlinedTextField(titulo, { titulo = it.take(160) }, label = { Text("Título (opcional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(corpo, { corpo = it }, label = { Text("Escreva aqui…") }, modifier = Modifier.fillMaxWidth().height(120.dp))
-                    Spacer(Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(publica, { publica = it }, colors = CheckboxDefaults.colors(checkedColor = FiapMagenta))
-                        Text("Compartilhar com a turma", fontSize = 13.sp)
-                    }
+        PopupPadrao(
+            icone = Icons.Filled.Edit,
+            titulo = "Nova anotação",
+            subtitulo = "Guarde o que aprendeu, compartilhe se quiser.",
+            onFechar = { criando = false },
+            textoConfirmar = "Salvar",
+            confirmarHabilitado = corpo.trim().isNotEmpty(),
+            onConfirmar = {
+                escopo.launch {
+                    runCatching { api.criarNota(corpo, titulo, publica, disc) }
+                    criando = false; aba = "minhas"; recarregar()
                 }
             },
-        )
+        ) {
+            CampoPadrao(titulo, { titulo = it.take(160) }, label = "Título (opcional)", icone = Icons.Filled.Edit, placeholder = "Ex.: Variáveis e tipos")
+            CampoPadrao(corpo, { corpo = it }, label = "Anotação", icone = Icons.AutoMirrored.Filled.EventNote, placeholder = "Escreva aqui…", linhaUnica = false, minAltura = 100.dp)
+            CheckboxPadrao(publica, { publica = it }, "Compartilhar com a turma")
+        }
     }
 }
 
 @Composable
-private fun CartaoPostit(n: NotaApp, souAutor: Boolean, sessao: Sessao, onApagar: () -> Unit) {
-    val cor = coresPostit[(n.id.let { if (it < 0) -it else it }) % coresPostit.size]
+private fun CartaoPostit(n: NotaApp, indice: Int, souAutor: Boolean, sessao: Sessao, onApagar: () -> Unit) {
+    val cor = coresPostit[indice % coresPostit.size]
     val textoEscuro = Color(0xFF2B2B2B)
     Box(Modifier.fillMaxWidth()) {
         Column(
             Modifier.fillMaxWidth()
-                .rotate(if (n.id % 2 == 0) -1.4f else 1.6f)
+                .rotate(if (indice % 2 == 0) -1.4f else 1.6f)
+                .shadow(8.dp, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 14.dp, bottomEnd = 14.dp), ambientColor = Color(0x66603C14), spotColor = Color(0x66603C14))
                 .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 14.dp, bottomEnd = 14.dp))
                 .background(cor)
                 .padding(top = 20.dp, start = 14.dp, end = 14.dp, bottom = 14.dp),
