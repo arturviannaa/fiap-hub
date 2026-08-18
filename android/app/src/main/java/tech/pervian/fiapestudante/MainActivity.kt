@@ -84,19 +84,28 @@ class MainActivity : ComponentActivity() {
         splash.setKeepOnScreenCondition { !splashPronto }
         window.decorView.postDelayed({ splashPronto = true }, 320)
         splash.setOnExitAnimationListener { provider ->
-            val icone = provider.iconView
-            val conjunto = android.animation.AnimatorSet()
-            conjunto.playTogether(
-                android.animation.ObjectAnimator.ofFloat(icone, android.view.View.SCALE_X, 1f, 1.6f),
-                android.animation.ObjectAnimator.ofFloat(icone, android.view.View.SCALE_Y, 1f, 1.6f),
-                android.animation.ObjectAnimator.ofFloat(provider.view, android.view.View.ALPHA, 1f, 0f),
-            )
-            conjunto.duration = 420
-            conjunto.interpolator = android.view.animation.DecelerateInterpolator()
-            conjunto.addListener(object : android.animation.AnimatorListenerAdapter() {
-                override fun onAnimationEnd(a: android.animation.Animator) = provider.remove()
-            })
-            conjunto.start()
+            // provider.iconView nem sempre existe: quando a abertura demora, o
+            // sistema ja descartou o icone na hora da entrega, e o androidx faz
+            // platformView.iconView!! -> NPE que derrubava o app ao abrir
+            // (Android 16). Saida do splash e enfeite: nunca pode matar o start.
+            runCatching {
+                val icone = runCatching { provider.iconView }.getOrNull()
+                val animacoes = mutableListOf<android.animation.Animator>(
+                    android.animation.ObjectAnimator.ofFloat(provider.view, android.view.View.ALPHA, 1f, 0f),
+                )
+                if (icone != null) {
+                    animacoes += android.animation.ObjectAnimator.ofFloat(icone, android.view.View.SCALE_X, 1f, 1.6f)
+                    animacoes += android.animation.ObjectAnimator.ofFloat(icone, android.view.View.SCALE_Y, 1f, 1.6f)
+                }
+                val conjunto = android.animation.AnimatorSet()
+                conjunto.playTogether(animacoes)
+                conjunto.duration = 420
+                conjunto.interpolator = android.view.animation.DecelerateInterpolator()
+                conjunto.addListener(object : android.animation.AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(a: android.animation.Animator) = provider.remove()
+                })
+                conjunto.start()
+            }.onFailure { provider.remove() }
         }
 
         criarCanalNotificacao()
