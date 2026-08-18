@@ -63,6 +63,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import tech.pervian.fiapestudante.data.Api
 import tech.pervian.fiapestudante.data.Atualizacao
+import tech.pervian.fiapestudante.data.Crash
 import tech.pervian.fiapestudante.data.Push
 import tech.pervian.fiapestudante.data.Sessao
 import tech.pervian.fiapestudante.data.VersaoApp
@@ -73,6 +74,7 @@ const val CANAL_NOTIF = "novidades"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        Crash.instalar(applicationContext)
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
 
