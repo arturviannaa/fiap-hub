@@ -17,6 +17,15 @@ VC=$(sed -nE 's/.*versionCode = ([0-9]+).*/\1/p' app/build.gradle.kts)
 VN=$(sed -nE 's/.*versionName = "([^"]+)".*/\1/p' app/build.gradle.kts)
 OBRIGATORIO="${OBRIGATORIO:-false}"
 
+# Publicar um versionCode <= ao que ja esta no ar deixa a atualizacao invisivel:
+# o app so oferece update quando o code do servidor e MAIOR que o instalado.
+VC_NO_AR=$(curl -fsS "$URL/app/version.json" 2>/dev/null | sed -nE 's/.*"versionCode":([0-9]+).*/\1/p' || true)
+if [ -n "$VC_NO_AR" ] && [ "$VC" -le "$VC_NO_AR" ]; then
+  echo "abortado: versionCode $VC nao e maior que o publicado ($VC_NO_AR) - ninguem receberia a atualizacao." >&2
+  echo "suba versionCode/versionName em app/build.gradle.kts antes de publicar." >&2
+  exit 1
+fi
+
 echo "== build v$VN (code $VC) =="
 ./gradlew :app:assembleDebug --console=plain
 ./gradlew --stop >/dev/null 2>&1 || true

@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
@@ -177,6 +178,7 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
         Aba("aulas", "Aulas", Icons.AutoMirrored.Filled.MenuBook),
         Aba("anotacoes", "Notas", Icons.Filled.Edit),
         Aba("materiais", "Materiais", Icons.Filled.Description),
+        Aba("chat", "Chat", Icons.Filled.Chat),
         Aba("grupos", "Grupos", Icons.Filled.Lock),
     )
 
@@ -338,7 +340,7 @@ private fun BarraAbas(abas: List<Aba>, atual: String?, onSelect: (String) -> Uni
         abas.forEach { aba ->
             val on = atual == aba.rota
             Column(
-                Modifier.width(64.dp).clickableSemRipple { onSelect(aba.rota) },
+                Modifier.weight(1f).clickableSemRipple { onSelect(aba.rota) },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Icon(aba.icone, aba.rotulo, tint = if (on) FiapMagenta else corMuted(), modifier = Modifier.size(23.dp))

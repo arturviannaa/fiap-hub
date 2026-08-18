@@ -2,8 +2,11 @@ package tech.pervian.fiapestudante.data
 
 import android.content.Context
 import com.google.firebase.messaging.FirebaseMessaging
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.MediaType.Companion.toMediaType
 
@@ -24,6 +27,12 @@ object Push {
             .header("Authorization", "Bearer $auth")
             .post(body)
             .build()
-        runCatching { http.newCall(req).execute().close() }
+        // enqueue e nao execute: o callback do token do FCM chega na main thread,
+        // onde execute() estoura NetworkOnMainThreadException — que o runCatching
+        // engolia em silencio, deixando o aparelho sem registrar.
+        http.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: java.io.IOException) {}
+            override fun onResponse(call: Call, response: Response) = response.close()
+        })
     }
 }
