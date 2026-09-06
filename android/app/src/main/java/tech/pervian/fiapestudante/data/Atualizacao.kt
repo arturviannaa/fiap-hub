@@ -50,7 +50,7 @@ object Atualizacao {
 
         val dm = ctx.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val pedido = DownloadManager.Request(Uri.parse(apkUrl))
-            .setTitle("FIAP Estudante")
+            .setTitle("FIAP Community")
             .setDescription("Baixando atualização…")
             .setDestinationInExternalFilesDir(ctx, Environment.DIRECTORY_DOWNLOADS, "FIAP-Estudante.apk")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)

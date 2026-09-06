@@ -42,7 +42,7 @@ fun SheetAtualizacao(versao: VersaoApp, onAtualizar: () -> Unit, onDepois: (() -
                         ) { Icon(Icons.Filled.RocketLaunch, null, tint = Color.White, modifier = Modifier.size(34.dp)) }
                         Spacer(Modifier.height(12.dp))
                         Text("Nova versão disponível", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text("FIAP Estudante ${versao.versionName}", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
+                        Text("FIAP Community ${versao.versionName}", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
                     }
                 }
 

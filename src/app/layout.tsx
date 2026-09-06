@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: { default: 'Turma FIAP · Plataforma de Estudos', template: '%s · Turma FIAP' },
-  description: 'Plataforma de estudos da turma: aulas, anotações, materiais e chat.',
+  title: { default: 'FIAP Community · Plataforma de Estudos', template: '%s · FIAP Community' },
+  description: 'Plataforma de estudos feita por alunos: aulas, anotações, materiais e chat.',
   robots: { index: false, follow: false },
   icons: { icon: '/favicon.svg' },
 }

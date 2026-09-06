@@ -233,7 +233,7 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
     Scaffold(
         topBar = {
             CabecalhoApp(
-                tituloTela = abas.find { it.rota == atual }?.rotulo ?: (sessao.disciplinaCurto ?: "FIAP Estudante"),
+                tituloTela = abas.find { it.rota == atual }?.rotulo ?: (sessao.disciplinaCurto ?: "FIAP Community"),
                 subDisciplina = sessao.disciplinaCurto ?: "",
                 naoLidas = naoLidas,
                 onLogo = { nav.navigate("perfil") },
@@ -314,7 +314,7 @@ private fun CabecalhoApp(
         Column(Modifier.weight(1f).clickableSemRipple(onTrocarDisciplina)) {
             Text(tituloTela, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = 15.sp)
             Text(
-                if (subDisciplina.isNotEmpty()) "$subDisciplina · Turma FIAP" else "Turma FIAP",
+                if (subDisciplina.isNotEmpty()) "$subDisciplina · FIAP Community" else "FIAP Community",
                 fontSize = 11.sp, color = corMuted(),
             )
         }

@@ -142,13 +142,13 @@ export function Shell({
           F
         </span>
         <span className="leading-tight">
-          <span className="block text-[15px] font-bold">Turma FIAP</span>
+          <span className="block text-[15px] font-bold">FIAP Community</span>
           <span className="block text-[12px] suave">Plataforma de Estudos</span>
         </span>
       </Link>
 
       <Explorer
-        raiz={disciplina?.curto ?? 'Turma FIAP'}
+        raiz={disciplina?.curto ?? 'FIAP Community'}
         modulos={modulos}
         canais={canais}
         grupos={grupos}

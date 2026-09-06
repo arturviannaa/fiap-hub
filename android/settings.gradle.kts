@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "FIAP Estudante"
+rootProject.name = "FIAP Community"
 include(":app")

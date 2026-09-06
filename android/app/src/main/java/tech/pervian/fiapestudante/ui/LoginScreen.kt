@@ -71,7 +71,7 @@ fun LoginScreen(api: Api, sessao: Sessao, aoEntrar: () -> Unit) {
         ) { Text("FIAP", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp) }
 
         Spacer(Modifier.height(20.dp))
-        Text("FIAP Estudante", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text("FIAP Community", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
         Text("Plataforma de estudos da turma", color = Color(0xFF969AA8), fontSize = 13.sp)
         Spacer(Modifier.height(28.dp))
 

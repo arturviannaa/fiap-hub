@@ -49,5 +49,5 @@ SECRET=$(ssh "$VPS" "grep '^INTERNO_SECRET=' $DIR/.env | cut -d= -f2-" 2>/dev/nu
 if [ -n "$SECRET" ]; then
   curl -s -o /dev/null -w 'push nova versão: %{http_code}\n' $URL/api/interno/broadcast \
     -H 'Content-Type: application/json' \
-    -d "{\"secret\":\"$SECRET\",\"titulo\":\"Nova versão disponível 🚀\",\"corpo\":\"Atualize o FIAP Estudante para a v$VN — toque para abrir e atualizar.\"}"
+    -d "{\"secret\":\"$SECRET\",\"titulo\":\"Nova versão disponível 🚀\",\"corpo\":\"Atualize o FIAP Community para a v$VN — toque para abrir e atualizar.\"}"
 fi
