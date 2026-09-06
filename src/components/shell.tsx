@@ -138,12 +138,12 @@ export function Shell({
   const lateral = (
     <div className="flex h-full min-h-0 flex-col">
       <Link href="/" className="flex items-center gap-2.5 px-3 py-3">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-fiap-400 to-fiap-500 text-base font-extrabold text-white shadow-lg shadow-fiap-500/40">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-fiap-400 to-fiap-500 text-lg font-extrabold text-white shadow-lg shadow-fiap-500/40">
           F
         </span>
         <span className="leading-tight">
-          <span className="block text-sm font-bold">Turma FIAP</span>
-          <span className="block text-[11px] suave">Plataforma de Estudos</span>
+          <span className="block text-[15px] font-bold">Turma FIAP</span>
+          <span className="block text-[12px] suave">Plataforma de Estudos</span>
         </span>
       </Link>
 
@@ -159,7 +159,7 @@ export function Shell({
   )
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr]">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[17.5rem_1fr]">
       <Presenca />
       <aside className="sticky top-0 hidden h-dvh border-r border-[var(--borda)] bg-[var(--painel)] backdrop-blur-2xl lg:block">
         {lateral}
@@ -169,7 +169,7 @@ export function Shell({
       {aberto && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setAberto(false)} />
-          <aside className="absolute inset-y-0 left-0 w-64 border-r border-[var(--borda)] bg-[var(--fundo)] surge">
+          <aside className="absolute inset-y-0 left-0 w-[17.5rem] border-r border-[var(--borda)] bg-[var(--fundo)] surge">
             <button
               onClick={() => setAberto(false)}
               className="absolute right-2 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg hover:bg-[var(--painel-2)]"

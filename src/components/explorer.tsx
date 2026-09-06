@@ -47,6 +47,10 @@ type No = {
 
 const CHAVE_ABERTOS = 'explorer:abertos'
 
+const PAD = 8
+const INDENT = 14
+const recuo = (nivel: number) => PAD + nivel * INDENT
+
 function Linha({
   no,
   nivel,
@@ -62,12 +66,12 @@ function Linha({
 }) {
   const pasta = !!no.filhos?.length
   const Icone = no.Icone
-  const classe = `group flex h-7 w-full items-center gap-1.5 pr-2 text-left text-[13px] transition-colors ${
+  const classe = `group flex h-8 w-full items-center gap-2 pr-2 text-left text-[14px] transition-colors ${
     ativo
       ? 'bg-fiap-500/10 font-medium text-fiap-600 dark:text-fiap-400'
       : 'suave hover:bg-[var(--painel-2)] hover:text-[var(--texto)]'
   }`
-  const estilo = { paddingLeft: 6 + nivel * 12 }
+  const estilo = { paddingLeft: recuo(nivel) }
 
   const dentro = (
     <>
@@ -86,14 +90,14 @@ function Linha({
         }
         className="grid h-4 w-4 shrink-0 place-items-center opacity-70"
       >
-        {pasta && (aberto ? <ChevronDown size={13} /> : <ChevronRight size={13} />)}
+        {pasta && (aberto ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
       </span>
       {no.iconeModulo ? (
         <span className="shrink-0 text-fiap-500">
-          <IconeModulo nome={no.iconeModulo} size={14} />
+          <IconeModulo nome={no.iconeModulo} size={15} />
         </span>
       ) : Icone ? (
-        <Icone size={14} className="shrink-0" />
+        <Icone size={15} className="shrink-0" />
       ) : null}
       <span className="truncate">{no.rotulo}</span>
     </>
@@ -142,9 +146,9 @@ function Ramo({
             {aberto && no.filhos?.length ? (
               <div
                 className="border-l border-[var(--borda)]"
-                style={{ marginLeft: 6 + nivel * 12 + 7 }}
+                style={{ marginLeft: recuo(nivel) + 8 }}
               >
-                <div style={{ marginLeft: -(6 + nivel * 12 + 7) }}>
+                <div style={{ marginLeft: -(recuo(nivel) + 8) }}>
                   <Ramo
                     nos={no.filhos}
                     nivel={nivel + 1}
@@ -272,13 +276,13 @@ export function Explorer({
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto py-1">
-      <div className="group/raiz flex h-7 items-center gap-1 pl-1.5 pr-2">
+      <div className="group/raiz flex h-8 items-center gap-1 pl-2 pr-2">
         <button
           type="button"
           onClick={() => setRaizAberta((v) => !v)}
-          className="flex min-w-0 flex-1 items-center gap-1 text-left text-[11px] font-bold uppercase tracking-wide suave hover:text-[var(--texto)]"
+          className="flex min-w-0 flex-1 items-center gap-1 text-left text-[12px] font-bold uppercase tracking-wide suave hover:text-[var(--texto)]"
         >
-          {raizAberta ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+          {raizAberta ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           <span className="truncate">{raiz}</span>
         </button>
         <button
@@ -288,7 +292,7 @@ export function Explorer({
           title="Recolher tudo"
           aria-label="Recolher tudo"
         >
-          <ChevronsDownUp size={14} />
+          <ChevronsDownUp size={15} />
         </button>
       </div>
 
@@ -345,17 +349,17 @@ export function TrocarDisciplina({
           setBusca('')
           setAberto(true)
         }}
-        className="flex h-10 w-full shrink-0 items-center gap-2 border-t border-[var(--borda)] px-3 text-left text-[13px] transition-colors hover:bg-[var(--painel-2)]"
+        className="flex h-11 w-full shrink-0 items-center gap-2 border-t border-[var(--borda)] px-3 text-left text-[14px] transition-colors hover:bg-[var(--painel-2)]"
         title="Trocar disciplina"
       >
         <span
-          className="h-2 w-2 shrink-0 rounded-full"
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ background: atual?.cor ?? 'var(--texto-2)' }}
         />
         <span className="min-w-0 flex-1 truncate font-medium">
           {atual?.curto ?? 'Escolher disciplina'}
         </span>
-        <ChevronsUpDown size={13} className="shrink-0 suave" />
+        <ChevronsUpDown size={14} className="shrink-0 suave" />
       </button>
 
       {aberto &&
