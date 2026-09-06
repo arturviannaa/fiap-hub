@@ -147,7 +147,7 @@ fun AulaScreen(api: Api, sessao: Sessao, slug: String, onVoltar: () -> Unit, onA
         }
 
         Surface(shadowElevation = 8.dp) {
-            Row(Modifier.fillMaxWidth().padding(12.dp).navigationBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = {
                         val novo = !concluida
