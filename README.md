@@ -3,7 +3,7 @@
 Ambiente interno da turma para estudar **Computational Thinking with Python**:
 as aulas da professora organizadas por assunto, anotações, materiais e chat ao vivo.
 
-Em produção: **https://fiap.pervian.tech**
+Em produção numa instância privada da turma (URL não divulgada).
 
 ## O que tem
 
@@ -47,9 +47,11 @@ As defesas em camadas:
 
 Suítes de ataque em `scripts/` (rodam contra a instância local).
 
-Assunção conhecida: o conteúdo das aulas vem do repositório da professora e é renderizado
-como HTML confiável. Um `ponytail:` marca esse ponto — sanitizar quebraria as tabelas do
-pandas, e o vetor exigiria comprometer o GitHub dela.
+O conteúdo das aulas vem de repositórios de terceiros, então todo HTML de notebook passa
+por uma allowlist em build time (`scripts/sanitiza.mjs`) antes de virar JSON — o app só
+injeta o que já foi sanitizado. A allowlist preserva tabelas do pandas e imagens inline do
+matplotlib; `<script>`, `<iframe>`, `<style>`, `<form>`, handlers `on*` e `javascript:` caem.
+Coberto por `scripts/test-sanitizacao.mjs` (12 vetores), que roda no `npm test`.
 
 ## Stack
 
@@ -60,7 +62,7 @@ Sem ORM: são cinco tabelas, o SQL fica em `db/schema.sql` e roda sozinho a cada
 
 ## Acesso
 
-1. `https://fiap.pervian.tech/cadastro`
+1. `https://<host>/cadastro`
 2. E-mail institucional (`@fiap.com.br` ou `@alunos.fiap.com.br`) + senha + **código da turma**
 3. O código fica em `CODIGO_TURMA` no `.env` da VPS
 
@@ -89,7 +91,7 @@ node scripts/e2e.mjs http://localhost:8082 <codigo-da-turma>
 ./deploy.sh "o que mudou"
 ```
 
-Faz commit, empurra pro GitHub e reconstrói na VPS (`/opt/fiap-hub`), esperando o healthcheck.
+Faz commit, empurra pro GitHub e reconstrói na VPS (host e caminho vêm de `.deploy-target`, não versionado), esperando o healthcheck.
 
 Na VPS: nginx faz TLS (Let's Encrypt, renovação automática) e proxy para `127.0.0.1:8082`;
 `/api/chat/` vai com buffer desligado, senão o tempo real morre no proxy.

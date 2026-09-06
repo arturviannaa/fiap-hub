@@ -8,6 +8,8 @@ repos/
 uploads/
 *.log
 .DS_Store
+.idea/
+.vscode/
 next-env.d.ts
 tsconfig.tsbuildinfo
 
@@ -21,3 +23,6 @@ PROD-TUNNEL.md
 
 # overrides locais de docker compose (nunca deploy)
 docker-compose.override.yml
+
+# alvo de deploy (host/paths da VPS) - local, nao versionado
+.deploy-target

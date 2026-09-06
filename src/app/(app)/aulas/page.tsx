@@ -7,7 +7,7 @@ import { discAtiva } from '@/lib/disciplina'
 import { redirect } from 'next/navigation'
 import { Cabecalho } from '@/components/cabecalho'
 import { IconeModulo } from '@/components/icone-modulo'
-import { Selo } from '@/components/ui'
+import { IconeBadge, Selo } from '@/components/ui'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Aulas' }
@@ -31,9 +31,9 @@ export default async function Aulas() {
         {dados.modulos.map((m, iM) => (
           <section key={m.slug} id={m.slug} className="scroll-mt-20">
             <div className="mb-3 flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-fiap-500/12 text-fiap-500">
+              <IconeBadge tamanho={40}>
                 <IconeModulo nome={m.icone} />
-              </span>
+              </IconeBadge>
               <div>
                 <h2 className="font-semibold">
                   <span className="suave">{String(iM + 1).padStart(2, '0')}.</span> {m.titulo}

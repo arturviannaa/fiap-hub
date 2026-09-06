@@ -77,7 +77,10 @@ export default async function Turma() {
                 {m.bio && <p className="mt-1 text-sm">{m.bio}</p>}
 
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--painel-2)]">
-                  <div className="h-full rounded-full bg-fiap-500" style={{ width: `${pct}%` }} />
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-fiap-500 to-fiap-400 transition-[width] duration-700"
+                    style={{ width: `${pct}%` }}
+                  />
                 </div>
                 <p className="mt-1.5 text-[11px] suave">
                   {m.aulas}/{total} aulas · {m.notas} anotações · {m.arquivos} materiais ·{' '}

@@ -97,11 +97,33 @@ fun PerfilScreen(api: Api, sessao: Sessao, onConfig: () -> Unit) {
         val notas = m.stats.notas.toIntOrNull() ?: 0
         val arquivos = m.stats.arquivos.toIntOrNull() ?: 0
         val mensagens = m.stats.mensagens.toIntOrNull() ?: 0
+
+        // Ofensiva de dias (streak).
+        Card(colors = CardDefaults.cardColors(containerColor = FiapMagenta.copy(alpha = 0.10f)), modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("🔥", fontSize = 30.sp)
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        if (m.streak > 0) "${m.streak} ${if (m.streak == 1) "dia" else "dias"} de ofensiva" else "Comece sua ofensiva!",
+                        fontWeight = FontWeight.Bold, fontSize = 16.sp,
+                    )
+                    Text(
+                        if (m.streak > 0) "Abra o app todo dia pra não zerar" else "Volte amanhã pra manter a sequência",
+                        fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.Gray,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+
         val conquistas = listOf(
             Conquista("🎯", "Primeira aula", aulas >= 1),
-            Conquista("🔥", "5 aulas", aulas >= 5),
+            Conquista("📗", "5 aulas", aulas >= 5),
             Conquista("📚", "Na metade", m.total > 0 && aulas >= m.total / 2),
             Conquista("🏆", "Tudo feito", m.total > 0 && aulas >= m.total),
+            Conquista("🔥", "Ofensiva 3d", m.streak >= 3),
+            Conquista("⚡", "Ofensiva 7d", m.streak >= 7),
             Conquista("✍️", "Anotador", notas >= 3),
             Conquista("📎", "Compartilhou", arquivos >= 1),
             Conquista("💬", "Tagarela", mensagens >= 20),

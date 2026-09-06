@@ -106,7 +106,11 @@ data class Mensagem(
     val arquivo_nome: String? = null,
     val arquivo_mime: String? = null,
     val arquivo_tamanho: Long? = null,
+    val reacoes: List<Reacao> = emptyList(),
 )
+
+@Serializable
+data class Reacao(val emoji: String, val n: Int = 0, val eu: Boolean = false)
 
 @Serializable
 data class RespChat(
@@ -139,7 +143,7 @@ data class RespTurma(val total: Int = 0, val euId: Int = 0, val membros: List<Me
 data class Stats(val aulas: String = "0", val notas: String = "0", val arquivos: String = "0", val mensagens: String = "0")
 
 @Serializable
-data class RespMe(val usuario: Usuario, val total: Int = 0, val stats: Stats = Stats())
+data class RespMe(val usuario: Usuario, val total: Int = 0, val stats: Stats = Stats(), val streak: Int = 0)
 
 // ---- perfil de outra pessoa ----------------------------------------------
 
@@ -213,6 +217,9 @@ data class RespNotas(val notas: List<NotaApp> = emptyList(), val euId: Int = 0)
 
 @Serializable
 data class NovaNota(val corpo: String, val titulo: String = "", val publica: Boolean = false, val disciplina: String = "python")
+
+@Serializable
+data class NotaEditada(val id: Int, val corpo: String, val titulo: String = "", val publica: Boolean = false)
 
 @Serializable
 data class MaterialApp(

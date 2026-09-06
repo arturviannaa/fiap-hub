@@ -122,6 +122,11 @@ class Api(private val sessao: Sessao) {
         cliente.newCall(req("/api/mobile/chat/apagar").post(body).build()).execute().close()
     }
 
+    suspend fun reagir(id: Int, emoji: String): Unit = withContext(Dispatchers.IO) {
+        val body = """{"id":$id,"emoji":${JSON.encodeToString(emoji)}}""".toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/chat/reagir").post(body).build()).execute().close()
+    }
+
     suspend fun usuario(id: Int): PerfilUsuario = get("/api/mobile/usuario/$id")
 
     suspend fun adminPapel(usuarioId: Int, papel: String): RespAdmin =
@@ -163,6 +168,10 @@ class Api(private val sessao: Sessao) {
     suspend fun apagarNota(id: Int): Unit = withContext(Dispatchers.IO) {
         val body = JSON.encodeToString(mapOf("id" to id)).toRequestBody(JSON_MEDIA)
         cliente.newCall(req("/api/mobile/notas/apagar").post(body).build()).execute().close()
+    }
+    suspend fun editarNota(id: Int, corpo: String, titulo: String, publica: Boolean): Unit = withContext(Dispatchers.IO) {
+        val body = JSON.encodeToString(NotaEditada(id, corpo, titulo, publica)).toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/notas/editar").post(body).build()).execute().close()
     }
     suspend fun materiais(aba: String, disc: String): RespMateriais = get("/api/mobile/materiais?aba=$aba&disciplina=$disc")
 
