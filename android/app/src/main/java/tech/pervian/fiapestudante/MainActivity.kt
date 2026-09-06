@@ -1,5 +1,6 @@
 package tech.pervian.fiapestudante
 
+import android.net.Uri
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -229,11 +231,13 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
     }
 
     val atual = nav.currentBackStackEntryAsState().value?.destination?.route?.substringBefore("/")
+    // A conversa ocupa a tela toda: sem top bar e sem tab bar, só o voltar dela.
+    val semChrome = atual == "conversa"
 
     Scaffold(
         topBar = {
-            CabecalhoApp(
-                tituloTela = abas.find { it.rota == atual }?.rotulo ?: (sessao.disciplinaCurto ?: "FIAP Estudante"),
+            if (!semChrome) CabecalhoApp(
+                tituloTela = abas.find { it.rota == atual }?.rotulo ?: (sessao.disciplinaCurto ?: "FIAP Community"),
                 subDisciplina = sessao.disciplinaCurto ?: "",
                 naoLidas = naoLidas,
                 onLogo = { nav.navigate("perfil") },
@@ -242,8 +246,9 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
                 onTrocarDisciplina = onTrocarDisciplina,
             )
         },
+        contentWindowInsets = if (semChrome) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
         bottomBar = {
-            BarraAbas(abas, atual) { rota ->
+            if (!semChrome) BarraAbas(abas, atual) { rota ->
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 nav.navigate(rota) { popUpTo("painel"); launchSingleTop = true }
             }
@@ -265,12 +270,20 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
             }
             composable("anotacoes") { AnotacoesScreen(api, sessao, disc) }
             composable("materiais") { MateriaisScreen(api, sessao, disc) }
-            composable("chat") { ChatScreen(api, sessao, disc = disc, canalInicial = "$disc:geral", onAbrirPerfil = { nav.navigate("u/$it") }) }
-            composable("grupo/{id}") {
-                val gid = it.arguments?.getString("id") ?: ""
-                ChatScreen(api, sessao, disc = disc, canalInicial = "g:$gid", onAbrirPerfil = { u -> nav.navigate("u/$u") })
+            composable("chat") {
+                ChatListaScreen(api, sessao, disc) { c -> nav.navigate("conversa/${Uri.encode(c)}") }
             }
-            composable("grupos") { GruposScreen(api, sessao, onAbrirGrupo = { nav.navigate("grupo/$it") }) }
+            composable("conversa/{canal}") {
+                ChatScreen(
+                    api, sessao, disc = disc,
+                    canal = Uri.decode(it.arguments?.getString("canal") ?: "$disc:geral"),
+                    onVoltar = { nav.popBackStack() },
+                    onAbrirPerfil = { u -> nav.navigate("u/$u") },
+                )
+            }
+            composable("grupos") {
+                GruposScreen(api, sessao, onAbrirGrupo = { nav.navigate("conversa/${Uri.encode("g:$it")}") })
+            }
             composable("turma") { TurmaScreen(api, sessao, onAbrirPerfil = { nav.navigate("u/$it") }) }
             composable("u/{id}") {
                 PerfilPublicoScreen(api, sessao, it.arguments?.getString("id")?.toIntOrNull() ?: 0, onVoltar = { nav.popBackStack() })
@@ -283,7 +296,7 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
                 NotificacoesScreen(
                     api, sessao,
                     onVoltar = { nav.popBackStack() },
-                    onAbrirGrupo = { nav.navigate("grupo/$it") },
+                    onAbrirGrupo = { nav.navigate("conversa/${Uri.encode("g:$it")}") },
                     onAbrirAula = { nav.navigate("aula/$it") },
                     onLidas = { naoLidas = 0 },
                 )
@@ -301,29 +314,29 @@ private fun CabecalhoApp(
     Row(
         Modifier.fillMaxWidth().background(corPainel())
             .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(start = 18.dp, end = 18.dp, top = 6.dp, bottom = 12.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(38.dp).clip(RoundedCornerShape(11.dp))
+            Modifier.size(34.dp).clip(RoundedCornerShape(10.dp))
                 .background(androidx.compose.ui.graphics.Brush.linearGradient(FiapGradiente))
                 .clickableSemRipple(onLogo),
             contentAlignment = Alignment.Center,
-        ) { Text("F", color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, fontSize = 16.sp) }
-        Spacer(Modifier.width(12.dp))
+        ) { Text("F", color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, fontSize = 15.sp) }
+        Spacer(Modifier.width(11.dp))
         Column(Modifier.weight(1f).clickableSemRipple(onTrocarDisciplina)) {
             Text(tituloTela, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = 15.sp)
             Text(
-                if (subDisciplina.isNotEmpty()) "$subDisciplina · Turma FIAP" else "Turma FIAP",
+                if (subDisciplina.isNotEmpty()) "$subDisciplina · FIAP Community" else "FIAP Community",
                 fontSize = 11.sp, color = corMuted(),
             )
         }
         Spacer(Modifier.width(8.dp))
-        BotaoIb(onClick = onTurma) { Icon(Icons.Filled.Groups, "Turma", modifier = Modifier.size(18.dp)) }
+        BotaoIb(onClick = onTurma) { Icon(Icons.Filled.Groups, "Turma", modifier = Modifier.size(17.dp)) }
         Spacer(Modifier.width(8.dp))
         BotaoIb(onClick = onNotif) {
             BadgedBox(badge = { if (naoLidas > 0) Badge { Text("$naoLidas") } }) {
-                Icon(Icons.Filled.Notifications, "Notificações", modifier = Modifier.size(18.dp))
+                Icon(Icons.Filled.Notifications, "Notificações", modifier = Modifier.size(17.dp))
             }
         }
     }
@@ -332,8 +345,8 @@ private fun CabecalhoApp(
 @Composable
 private fun BotaoIb(onClick: () -> Unit, content: @Composable () -> Unit) {
     Box(
-        Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(corPainel())
-            .border(BorderStroke(1.dp, corBorda()), RoundedCornerShape(12.dp))
+        Modifier.size(34.dp).clip(RoundedCornerShape(11.dp)).background(corPainel())
+            .border(BorderStroke(1.dp, corBorda()), RoundedCornerShape(11.dp))
             .clickableSemRipple(onClick),
         contentAlignment = Alignment.Center,
     ) { content() }
@@ -345,7 +358,7 @@ private fun BarraAbas(abas: List<Aba>, atual: String?, onSelect: (String) -> Uni
     Row(
         Modifier.fillMaxWidth().background(corPainel())
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(vertical = 10.dp, horizontal = 6.dp),
+            .padding(top = 7.dp, bottom = 5.dp, start = 6.dp, end = 6.dp),
         horizontalArrangement = Arrangement.SpaceAround,
     ) {
         abas.forEach { aba ->
@@ -354,10 +367,10 @@ private fun BarraAbas(abas: List<Aba>, atual: String?, onSelect: (String) -> Uni
                 Modifier.weight(1f).clickableSemRipple { onSelect(aba.rota) },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Icon(aba.icone, aba.rotulo, tint = if (on) FiapMagenta else corMuted(), modifier = Modifier.size(23.dp))
-                Spacer(Modifier.height(4.dp))
+                Icon(aba.icone, aba.rotulo, tint = if (on) FiapMagenta else corMuted(), modifier = Modifier.size(20.dp))
+                Spacer(Modifier.height(3.dp))
                 Text(
-                    aba.rotulo, fontSize = 10.sp,
+                    aba.rotulo, fontSize = 9.5.sp,
                     fontWeight = if (on) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium,
                     color = if (on) FiapMagenta else corMuted(),
                 )

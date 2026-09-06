@@ -12,7 +12,7 @@ export default function LayoutAuth({ children }: { children: React.ReactNode }) 
           <span className="grid h-9 w-9 place-items-center rounded-2xl bg-gradient-to-br from-fiap-400 to-fiap-500 font-bold shadow-lg shadow-fiap-500/40">
             F
           </span>
-          <span className="font-semibold">Turma FIAP</span>
+          <span className="font-semibold">FIAP Community</span>
         </Link>
 
         <div className="relative my-auto max-w-md">
@@ -39,7 +39,7 @@ export default function LayoutAuth({ children }: { children: React.ReactNode }) 
           </ul>
         </div>
 
-        <p className="relative text-xs text-white/30">Plataforma interna da turma · não oficial da FIAP</p>
+        <p className="relative text-xs text-white/30">Feito por alunos da FIAP · projeto independente, não oficial</p>
       </div>
 
       <div className="flex items-center justify-center p-6">

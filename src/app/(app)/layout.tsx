@@ -3,7 +3,8 @@ import { auth } from '@/lib/auth'
 import { um } from '@/lib/db'
 import { Shell } from '@/components/shell'
 import { discAtiva } from '@/lib/disciplina'
-import { disciplinas } from '@/lib/conteudo'
+import { conteudo, disciplinas } from '@/lib/conteudo'
+import { canaisDaDisciplina, gruposDoUsuario } from '@/lib/chat'
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
   const sessao = await auth()
@@ -16,9 +17,26 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
     : null
   if (!usuario) redirect('/entrar')
   const slug = await discAtiva()
-  const disc = slug ? disciplinas().find((d) => d.slug === slug) ?? null : null
+  const lista = disciplinas()
+  const disc = slug ? lista.find((d) => d.slug === slug) ?? null : null
+  const modulos = disc
+    ? conteudo(disc.slug).modulos.map((m) => ({
+        slug: m.slug,
+        titulo: m.titulo,
+        icone: m.icone,
+        aulas: m.aulas.map((a) => ({ slug: a.slug, titulo: a.titulo })),
+      }))
+    : []
+  const grupos = (await gruposDoUsuario(usuario.id)).map((g) => ({ id: g.id, nome: g.nome }))
   return (
-    <Shell usuario={usuario} disciplina={disc && { nome: disc.nome, curto: disc.curto, cor: disc.cor }}>
+    <Shell
+      usuario={usuario}
+      disciplina={disc}
+      disciplinas={lista}
+      modulos={modulos}
+      canais={disc ? canaisDaDisciplina(disc.slug) : []}
+      grupos={grupos}
+    >
       {children}
     </Shell>
   )

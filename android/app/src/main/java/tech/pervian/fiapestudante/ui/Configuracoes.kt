@@ -108,7 +108,7 @@ fun ConfiguracoesScreen(
             Spacer(Modifier.height(8.dp))
             Card {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text("FIAP Estudante", fontWeight = FontWeight.Medium)
+                    Text("FIAP Community", fontWeight = FontWeight.Medium)
                     Text("Versão $versaoApp · mesma conta do site", fontSize = 13.sp, color = Color.Gray)
                 }
             }

@@ -20,7 +20,7 @@ class FiapFcmService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(msg: RemoteMessage) {
-        val titulo = msg.notification?.title ?: msg.data["titulo"] ?: "FIAP Estudante"
+        val titulo = msg.notification?.title ?: msg.data["titulo"] ?: "FIAP Community"
         val corpo = msg.notification?.body ?: msg.data["corpo"] ?: ""
         mostrar(applicationContext, titulo, corpo)
     }

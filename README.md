@@ -1,6 +1,6 @@
-# Plataforma de Estudos — Turma FIAP
+# FIAP Community — Plataforma de Estudos
 
-Ambiente interno da turma para estudar **Computational Thinking with Python**:
+Plataforma feita por alunos da FIAP para estudar **Computational Thinking with Python**:
 as aulas da professora organizadas por assunto, anotações, materiais e chat ao vivo.
 
 Em produção numa instância privada da turma (URL não divulgada).
