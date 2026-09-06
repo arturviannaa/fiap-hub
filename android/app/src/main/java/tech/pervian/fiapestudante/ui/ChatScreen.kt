@@ -71,7 +71,13 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
     val euId = sessao.usuario?.id ?: -1
     val souAdmin = sessao.usuario?.papeis?.contains("admin") == true
     var apagar by remember { mutableStateOf<Int?>(null) }
+    var acaoMsg by remember { mutableStateOf<Mensagem?>(null) }
     val haptic = LocalHapticFeedback.current
+
+    fun reagir(id: Int, emoji: String) {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        escopo.launch { runCatching { api.reagir(id, emoji) } }
+    }
 
     LaunchedEffect(canal) {
         dados = try { api.chat(canal, disc) } catch (e: Exception) { null }
@@ -83,7 +89,10 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
         stream.conectar(canal) { ev ->
             when (ev.op) {
                 "del" -> mensagens.removeAll { it.id == ev.id }
-                else -> ev.msg?.let { m -> if (mensagens.none { it.id == m.id }) mensagens.add(m) }
+                else -> ev.msg?.let { m ->
+                    val idx = mensagens.indexOfFirst { it.id == m.id }
+                    if (idx >= 0) mensagens[idx] = m else mensagens.add(m)
+                }
             }
         }
         onDispose { stream.fechar() }
@@ -117,9 +126,9 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
             items(mensagens.size) { i ->
                 val m = mensagens[i]
                 val meu = m.usuario_id == euId
-                val dia = m.criado_em.substringBefore('T')
-                val diaAnterior = if (i > 0) mensagens[i - 1].criado_em.substringBefore('T') else ""
-                if (dia != diaAnterior && dia.isNotEmpty()) SeparadorDia(dia)
+                val dia = chaveDia(m.criado_em)
+                val diaAnterior = if (i > 0) chaveDia(mensagens[i - 1].criado_em) else ""
+                if (dia != diaAnterior && dia.isNotEmpty()) SeparadorDia(m.criado_em)
                 val corBolha = if (meu) FiapMagenta else MaterialTheme.colorScheme.surfaceVariant
                 val corTexto = if (meu) Color.White else MaterialTheme.colorScheme.onSurface
                 val forma = if (meu) RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
@@ -134,9 +143,10 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
                         }
                         Spacer(Modifier.width(8.dp))
                     }
+                    Column(horizontalAlignment = if (meu) Alignment.End else Alignment.Start) {
                     Column(
                         Modifier.widthIn(max = 300.dp).clip(forma).background(corBolha)
-                            .combinedClickable(onClick = {}, onLongClick = { if (meu || souAdmin) apagar = m.id })
+                            .combinedClickable(onClick = {}, onLongClick = { acaoMsg = m })
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         if (!meu) {
@@ -177,6 +187,13 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
                             fontSize = 10.sp, modifier = Modifier.align(Alignment.End).padding(top = 2.dp),
                         )
                     }
+                        if (m.reacoes.isNotEmpty()) {
+                            Spacer(Modifier.height(3.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                m.reacoes.forEach { r -> ChipReacao(r) { reagir(m.id, r.emoji) } }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -202,6 +219,33 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
         }
     }
 
+    acaoMsg?.let { m ->
+        val meu = m.usuario_id == euId
+        AlertDialog(
+            onDismissRequest = { acaoMsg = null },
+            confirmButton = {},
+            dismissButton = {
+                if (meu || souAdmin) TextButton(onClick = { apagar = m.id; acaoMsg = null }) {
+                    Text("Apagar", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                }
+            },
+            title = { Text("Reagir") },
+            text = {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    EMOJIS_REACAO.forEach { e ->
+                        val jaReagiu = m.reacoes.any { it.emoji == e && it.eu }
+                        Box(
+                            Modifier.size(46.dp).clip(CircleShape)
+                                .background(if (jaReagiu) FiapMagenta.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { reagir(m.id, e); acaoMsg = null },
+                            contentAlignment = Alignment.Center,
+                        ) { Text(e, fontSize = 22.sp) }
+                    }
+                }
+            },
+        )
+    }
+
     apagar?.let { id ->
         AlertDialog(
             onDismissRequest = { apagar = null },
@@ -216,6 +260,21 @@ fun ChatScreen(api: Api, sessao: Sessao, disc: String = "python", canalInicial: 
             title = { Text("Apagar mensagem?") },
             text = { Text("Essa ação não pode ser desfeita.") },
         )
+    }
+}
+
+// Mesma lista do backend (validada no /api/mobile/chat/reagir).
+val EMOJIS_REACAO = listOf("👍", "❤️", "😂", "🎉", "🔥")
+
+@Composable
+private fun ChipReacao(r: Reacao, onClick: () -> Unit) {
+    Box(
+        Modifier.clip(RoundedCornerShape(12.dp))
+            .background(if (r.eu) FiapMagenta.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+    ) {
+        Text("${r.emoji} ${r.n}", fontSize = 12.sp, color = if (r.eu) FiapMagenta else MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -234,12 +293,15 @@ private fun ChipCanal(rotulo: String, ativo: Boolean, onClick: () -> Unit) {
 
 private val MESES = listOf("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")
 
+// O servidor manda o instante em UTC (…Z). Converte pro fuso do celular.
+private fun dataLocal(iso: String): java.time.LocalDate? =
+    runCatching { java.time.Instant.parse(iso).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull()
+
+private fun chaveDia(iso: String): String = dataLocal(iso)?.toString() ?: iso.substringBefore('T')
+
 private fun diaLegivel(iso: String): String {
-    val p = iso.split("-")
-    if (p.size < 3) return iso
-    val mes = p[1].toIntOrNull() ?: return iso
-    val d = p[2].toIntOrNull() ?: return iso
-    return "$d de ${MESES.getOrElse(mes - 1) { "" }}"
+    val d = dataLocal(iso) ?: return iso.substringBefore('T')
+    return "${d.dayOfMonth} de ${MESES.getOrElse(d.monthValue - 1) { "" }}"
 }
 
 @Composable
@@ -264,7 +326,12 @@ fun baixarAnexo(ctx: Context, token: String?, id: Int, nome: String) {
 }
 
 fun hora(iso: String): String {
-    // "2026-08-12T06:34:39.430Z" -> "06:34" (só o HH:mm, sem lib de data)
-    val t = iso.substringAfter('T', "")
-    return if (t.length >= 5) t.substring(0, 5) else ""
+    // Instante UTC do servidor -> HH:mm no fuso local do celular.
+    return runCatching {
+        val z = java.time.Instant.parse(iso).atZone(java.time.ZoneId.systemDefault())
+        "%02d:%02d".format(z.hour, z.minute)
+    }.getOrElse {
+        val t = iso.substringAfter('T', "")
+        if (t.length >= 5) t.substring(0, 5) else ""
+    }
 }

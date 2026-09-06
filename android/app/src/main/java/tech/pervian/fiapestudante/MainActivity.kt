@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
@@ -62,6 +63,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import tech.pervian.fiapestudante.data.Api
 import tech.pervian.fiapestudante.data.Atualizacao
+import tech.pervian.fiapestudante.data.Crash
 import tech.pervian.fiapestudante.data.Push
 import tech.pervian.fiapestudante.data.Sessao
 import tech.pervian.fiapestudante.data.VersaoApp
@@ -72,8 +74,40 @@ const val CANAL_NOTIF = "novidades"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        Crash.instalar(applicationContext)
+        val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Segura o splash um instante e anima a saída: o logo FIAP dá um zoom-out
+        // suave e some, revelando o app. Funciona em todas as versões do Android.
+        var splashPronto = false
+        splash.setKeepOnScreenCondition { !splashPronto }
+        window.decorView.postDelayed({ splashPronto = true }, 320)
+        splash.setOnExitAnimationListener { provider ->
+            // provider.iconView nem sempre existe: quando a abertura demora, o
+            // sistema ja descartou o icone na hora da entrega, e o androidx faz
+            // platformView.iconView!! -> NPE que derrubava o app ao abrir
+            // (Android 16). Saida do splash e enfeite: nunca pode matar o start.
+            runCatching {
+                val icone = runCatching { provider.iconView }.getOrNull()
+                val animacoes = mutableListOf<android.animation.Animator>(
+                    android.animation.ObjectAnimator.ofFloat(provider.view, android.view.View.ALPHA, 1f, 0f),
+                )
+                if (icone != null) {
+                    animacoes += android.animation.ObjectAnimator.ofFloat(icone, android.view.View.SCALE_X, 1f, 1.6f)
+                    animacoes += android.animation.ObjectAnimator.ofFloat(icone, android.view.View.SCALE_Y, 1f, 1.6f)
+                }
+                val conjunto = android.animation.AnimatorSet()
+                conjunto.playTogether(animacoes)
+                conjunto.duration = 420
+                conjunto.interpolator = android.view.animation.DecelerateInterpolator()
+                conjunto.addListener(object : android.animation.AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(a: android.animation.Animator) = provider.remove()
+                })
+                conjunto.start()
+            }.onFailure { provider.remove() }
+        }
+
         criarCanalNotificacao()
         val sessao = Sessao(applicationContext)
         val api = Api(sessao)
@@ -155,6 +189,7 @@ fun AppPrincipal(api: Api, sessao: Sessao, disc: String, tema: String, onTema: (
         Aba("aulas", "Aulas", Icons.AutoMirrored.Filled.MenuBook),
         Aba("anotacoes", "Notas", Icons.Filled.Edit),
         Aba("materiais", "Materiais", Icons.Filled.Description),
+        Aba("chat", "Chat", Icons.Filled.Chat),
         Aba("grupos", "Grupos", Icons.Filled.Lock),
     )
 
@@ -316,7 +351,7 @@ private fun BarraAbas(abas: List<Aba>, atual: String?, onSelect: (String) -> Uni
         abas.forEach { aba ->
             val on = atual == aba.rota
             Column(
-                Modifier.width(64.dp).clickableSemRipple { onSelect(aba.rota) },
+                Modifier.weight(1f).clickableSemRipple { onSelect(aba.rota) },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Icon(aba.icone, aba.rotulo, tint = if (on) FiapMagenta else corMuted(), modifier = Modifier.size(23.dp))

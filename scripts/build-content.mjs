@@ -10,8 +10,10 @@ import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
+import { limparHtml } from './sanitiza.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+
 const OUT = process.env.CONTENT_OUT || join(root, 'content')
 const REPOS = process.env.REPOS_DIR || join(root, 'repos')
 const IMG_DIR = join(OUT, 'aulas')
@@ -133,7 +135,7 @@ function saidas(cell, aulaSlug, idx) {
         writeFileSync(join(IMG_DIR, nome), Buffer.from([].concat(o.data['image/png']).join(''), 'base64'))
         out.push({ tipo: 'imagem', src: `/conteudo/aulas/${nome}` })
       } else if (o.data['text/html']) {
-        out.push({ tipo: 'html', html: [].concat(o.data['text/html']).join('') })
+        out.push({ tipo: 'html', html: limparHtml([].concat(o.data['text/html']).join('')) })
       } else if (o.data['text/plain']) {
         const texto = [].concat(o.data['text/plain']).join('')
         if (texto.trim()) out.push({ tipo: 'texto', texto })
@@ -152,7 +154,7 @@ function converteNotebook(caminho, aulaSlug) {
     if (cell.cell_type === 'markdown') {
       const md = limpaMarkdown(fonte)
       if (!md) continue
-      blocos.push({ tipo: 'md', html: marked.parse(md) })
+      blocos.push({ tipo: 'md', html: limparHtml(marked.parse(md)) })
       textoBusca += ' ' + md
     } else if (cell.cell_type === 'code') {
       if (!fonte.trim()) continue

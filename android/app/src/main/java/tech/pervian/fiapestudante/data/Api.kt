@@ -122,6 +122,11 @@ class Api(private val sessao: Sessao) {
         cliente.newCall(req("/api/mobile/chat/apagar").post(body).build()).execute().close()
     }
 
+    suspend fun reagir(id: Int, emoji: String): Unit = withContext(Dispatchers.IO) {
+        val body = """{"id":$id,"emoji":${JSON.encodeToString(emoji)}}""".toRequestBody(JSON_MEDIA)
+        cliente.newCall(req("/api/mobile/chat/reagir").post(body).build()).execute().close()
+    }
+
     suspend fun usuario(id: Int): PerfilUsuario = get("/api/mobile/usuario/$id")
 
     suspend fun adminPapel(usuarioId: Int, papel: String): RespAdmin =
