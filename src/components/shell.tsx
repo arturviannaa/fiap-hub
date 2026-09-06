@@ -2,48 +2,35 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import {
-  BookOpen,
-  Files,
-  LayoutDashboard,
-  Lock,
-  LogOut,
-  Menu,
-  MessageSquare,
-  Moon,
-  NotebookPen,
-  Search,
-  Sun,
-  Users,
-  X,
-} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { LogOut, Menu, Moon, Search, SquarePen, Sun, X } from 'lucide-react'
 import { Avatar } from './ui'
 import { Presenca } from './presenca'
+import {
+  Explorer,
+  TrocarDisciplina,
+  type CanalItem,
+  type DisciplinaItem,
+  type GrupoItem,
+  type ModuloArvore,
+} from './explorer'
 import { sair } from '@/lib/acoes-auth'
 
-const LINKS = [
-  { href: '/', rotulo: 'Painel', Icone: LayoutDashboard },
-  { href: '/aulas', rotulo: 'Aulas', Icone: BookOpen },
-  { href: '/anotacoes', rotulo: 'Anotações', Icone: NotebookPen },
-  { href: '/arquivos', rotulo: 'Materiais', Icone: Files },
-  { href: '/chat', rotulo: 'Chat', Icone: MessageSquare },
-  { href: '/grupos', rotulo: 'Grupos', Icone: Lock },
-  { href: '/turma', rotulo: 'Turma', Icone: Users },
-]
+const ICONE = 'grid h-9 w-9 place-items-center rounded-xl suave transition-colors hover:bg-[var(--painel-2)] hover:text-[var(--texto)]'
 
 function TemaBotao() {
   const [escuro, setEscuro] = useState(false)
   useEffect(() => setEscuro(document.documentElement.classList.contains('dark')), [])
   return (
     <button
+      type="button"
       onClick={() => {
         const novo = !escuro
         document.documentElement.classList.toggle('dark', novo)
         localStorage.setItem('tema', novo ? 'escuro' : 'claro')
         setEscuro(novo)
       }}
-      className="grid h-10 w-10 place-items-center rounded-2xl border border-[var(--borda)] bg-[var(--painel-2)] hover:bg-[var(--painel)]"
+      className={ICONE}
       aria-label={escuro ? 'Usar tema claro' : 'Usar tema escuro'}
       title={escuro ? 'Tema claro' : 'Tema escuro'}
     >
@@ -52,44 +39,106 @@ function TemaBotao() {
   )
 }
 
+function MenuPerfil({
+  usuario,
+}: {
+  usuario: { id: number; nome: string; email: string; foto: string | null }
+}) {
+  const [aberto, setAberto] = useState(false)
+  const caixa = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!aberto) return
+    const fora = (e: MouseEvent) => {
+      if (!caixa.current?.contains(e.target as Node)) setAberto(false)
+    }
+    const tecla = (e: KeyboardEvent) => e.key === 'Escape' && setAberto(false)
+    document.addEventListener('mousedown', fora)
+    window.addEventListener('keydown', tecla)
+    return () => {
+      document.removeEventListener('mousedown', fora)
+      window.removeEventListener('keydown', tecla)
+    }
+  }, [aberto])
+
+  return (
+    <div ref={caixa} className="relative">
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={aberto}
+        aria-label="Meu perfil"
+        className={`grid h-10 w-10 place-items-center rounded-full ring-offset-2 ring-offset-[var(--fundo)] transition-shadow ${
+          aberto ? 'ring-2 ring-fiap-500/60' : ''
+        }`}
+      >
+        <Avatar nome={usuario.nome} tamanho={36} usuarioId={usuario.id} foto={usuario.foto} />
+      </button>
+
+      {aberto && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-[var(--borda)] bg-[var(--fundo)] shadow-2xl shadow-black/20 surge"
+        >
+          <div className="flex items-center gap-2.5 p-3">
+            <Avatar nome={usuario.nome} tamanho={38} usuarioId={usuario.id} foto={usuario.foto} />
+            <span className="min-w-0 leading-tight">
+              <span className="block truncate text-sm font-semibold">{usuario.nome}</span>
+              <span className="block truncate text-[11px] suave">{usuario.email}</span>
+            </span>
+          </div>
+
+          <div className="border-t border-[var(--borda)] p-2">
+            <Link
+              href="/perfil"
+              onClick={() => setAberto(false)}
+              className="flex h-9 items-center gap-2.5 rounded-xl px-2.5 text-sm transition-colors hover:bg-[var(--painel-2)]"
+            >
+              <SquarePen size={16} className="suave" />
+              Editar perfil
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-1 border-t border-[var(--borda)] p-2">
+            <TemaBotao />
+            <form action={sair} className="contents">
+              <button type="submit" className={ICONE} aria-label="Sair" title="Sair">
+                <LogOut size={17} />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function Shell({
   usuario,
   disciplina,
+  disciplinas = [],
+  modulos = [],
+  canais = [],
+  grupos = [],
   children,
 }: {
   usuario: { id: number; nome: string; email: string; papeis: string[]; foto: string | null }
-  disciplina?: { nome: string; curto: string; cor: string } | null
+  disciplina?: DisciplinaItem | null
+  disciplinas?: DisciplinaItem[]
+  modulos?: ModuloArvore[]
+  canais?: CanalItem[]
+  grupos?: GrupoItem[]
   children: React.ReactNode
 }) {
   const caminho = usePathname()
   const [aberto, setAberto] = useState(false)
   useEffect(() => setAberto(false), [caminho])
 
-  const ativo = (href: string) => (href === '/' ? caminho === '/' : caminho.startsWith(href))
-
-  const nav = (
-    <nav className="flex flex-col gap-1">
-      {LINKS.map(({ href, rotulo, Icone }) => (
-        <Link
-          key={href}
-          href={href}
-          className={`flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-colors ${
-            ativo(href)
-              ? 'border-[var(--borda)] bg-[var(--painel)] font-semibold text-fiap-600 shadow-md shadow-fiap-500/10 dark:text-fiap-400'
-              : 'border-transparent suave hover:bg-[var(--painel-2)] hover:text-[var(--texto)]'
-          }`}
-        >
-          <Icone size={18} />
-          {rotulo}
-        </Link>
-      ))}
-    </nav>
-  )
-
   const lateral = (
-    <div className="flex h-full flex-col gap-6 p-4">
-      <Link href="/" className="flex items-center gap-2.5 px-2 pt-1">
-        <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-fiap-400 to-fiap-500 text-lg font-extrabold text-white shadow-lg shadow-fiap-500/40">
+    <div className="flex h-full min-h-0 flex-col">
+      <Link href="/" className="flex items-center gap-2.5 px-3 py-3">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-fiap-400 to-fiap-500 text-base font-extrabold text-white shadow-lg shadow-fiap-500/40">
           F
         </span>
         <span className="leading-tight">
@@ -98,37 +147,14 @@ export function Shell({
         </span>
       </Link>
 
-      {disciplina && (
-        <Link
-          href="/disciplinas"
-          className="painel flex items-center gap-2.5 p-3 transition-colors hover:bg-[var(--painel-2)]"
-          title="Trocar de disciplina"
-        >
-          <span
-            className="h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_0_4px]"
-            style={{ background: disciplina.cor, boxShadow: `0 0 0 4px ${disciplina.cor}30` }}
-          />
-          <span className="min-w-0 leading-tight">
-            <span className="block truncate text-sm font-semibold">{disciplina.curto}</span>
-            <span className="block text-[11px] suave">trocar disciplina</span>
-          </span>
-        </Link>
-      )}
+      <Explorer
+        raiz={disciplina?.curto ?? 'Turma FIAP'}
+        modulos={modulos}
+        canais={canais}
+        grupos={grupos}
+      />
 
-      {nav}
-      <div className="mt-auto border-t border-[var(--borda)] pt-3">
-        <Link
-          href="/perfil"
-          className="flex items-center gap-3 rounded-2xl p-2 hover:bg-[var(--painel-2)]"
-          title="Meu perfil"
-        >
-          <Avatar nome={usuario.nome} tamanho={34} usuarioId={usuario.id} foto={usuario.foto} />
-          <span className="min-w-0 leading-tight">
-            <span className="block truncate text-sm font-medium">{usuario.nome}</span>
-            <span className="block truncate text-[11px] suave">{usuario.email}</span>
-          </span>
-        </Link>
-      </div>
+      <TrocarDisciplina atual={disciplina ?? null} lista={disciplinas} />
     </div>
   )
 
@@ -143,10 +169,10 @@ export function Shell({
       {aberto && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setAberto(false)} />
-          <aside className="absolute inset-y-0 left-0 w-64 border-r border-[var(--borda)] bg-[var(--painel)] backdrop-blur-2xl surge">
+          <aside className="absolute inset-y-0 left-0 w-64 border-r border-[var(--borda)] bg-[var(--fundo)] surge">
             <button
               onClick={() => setAberto(false)}
-              className="absolute right-3 top-4 grid h-8 w-8 place-items-center rounded-lg hover:bg-[var(--painel-2)]"
+              className="absolute right-2 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg hover:bg-[var(--painel-2)]"
               aria-label="Fechar menu"
             >
               <X size={18} />
@@ -173,17 +199,7 @@ export function Shell({
             <span className="truncate">Buscar nas aulas…</span>
           </Link>
           <div className="hidden flex-1 sm:block" />
-          <TemaBotao />
-          <form action={sair}>
-            <button
-              type="submit"
-              className="grid h-10 w-10 place-items-center rounded-2xl border border-[var(--borda)] bg-[var(--painel-2)] hover:bg-[var(--painel)]"
-              aria-label="Sair"
-              title="Sair"
-            >
-              <LogOut size={17} />
-            </button>
-          </form>
+          <MenuPerfil usuario={usuario} />
         </header>
         <main className="min-w-0 flex-1 px-3 py-5 sm:px-6 sm:py-7">{children}</main>
       </div>
