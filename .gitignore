@@ -26,3 +26,6 @@ docker-compose.override.yml
 
 # alvo de deploy (host/paths da VPS) - local, nao versionado
 .deploy-target
+
+# keystore de assinatura do app (backup em pervian:/opt/fiap-hub/secrets/)
+android/keystore/

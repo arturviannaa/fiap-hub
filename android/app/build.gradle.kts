@@ -6,6 +6,12 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+// Assinatura do app. A chave vive em android/keystore/ (fora do git), com backup em
+// pervian:/opt/fiap-hub/secrets/app-signing.jks. Sem ela o Gradle assinaria com a
+// ~/.android/debug.keystore da maquina, que e diferente em cada maquina: o Android entao
+// recusa a atualizacao de quem ja tem o app e so diz "app nao instalado".
+val keystoreDoApp = rootProject.file("keystore/app-signing.jks")
+
 android {
     namespace = "tech.pervian.fiapestudante"
     compileSdk = 36
@@ -33,8 +39,25 @@ android {
 
     testOptions { unitTests { isIncludeAndroidResources = true } }
 
+    signingConfigs {
+        create("app") {
+            if (!keystoreDoApp.exists()) throw GradleException(
+                "keystore ausente: android/keystore/app-signing.jks - recupere com: " +
+                "scp pervian:/opt/fiap-hub/secrets/app-signing.jks android/keystore/app-signing.jks"
+            )
+            storeFile = keystoreDoApp
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("app")
+        }
         release {
+            signingConfig = signingConfigs.getByName("app")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

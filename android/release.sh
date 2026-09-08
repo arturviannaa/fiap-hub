@@ -26,6 +26,14 @@ if [ -n "$VC_NO_AR" ] && [ "$VC" -le "$VC_NO_AR" ]; then
   exit 1
 fi
 
+# A chave de assinatura nao mora no ~/.android (que muda de maquina): fica aqui, fora do
+# git, com backup na VPS. Assinar com outra chave faz o Android recusar a atualizacao.
+if [ ! -f keystore/app-signing.jks ]; then
+  echo "== buscando keystore na VPS =="
+  mkdir -p keystore
+  scp "$VPS:/opt/fiap-hub/secrets/app-signing.jks" keystore/app-signing.jks
+fi
+
 echo "== build v$VN (code $VC) =="
 ./gradlew :app:assembleDebug --console=plain
 ./gradlew --stop >/dev/null 2>&1 || true
@@ -33,22 +41,41 @@ echo "== build v$VN (code $VC) =="
 APK=app/build/outputs/apk/debug/app-debug.apk
 
 # A assinatura precisa bater com a do APK que ja esta no ar. Chave diferente (ex.: build noutra
-# maquina, com outra debug.keystore) faz o Android recusar a atualizacao em todo mundo que ja
-# tem o app instalado - aparece so "app nao instalado", sem dizer o motivo.
-if [ "${PERMITIR_TROCA_DE_ASSINATURA:-false}" != "true" ] && command -v apksigner >/dev/null 2>&1; then
-  _digest() { apksigner verify --print-certs "$1" | sed -nE 's/.*SHA-256 digest: ([0-9a-f]+).*/\1/p' | head -1; }
+# maquina, com outra keystore) faz o Android recusar a atualizacao em quem ja tem o app
+# instalado - aparece so "app nao instalado", sem dizer o motivo.
+_apksigner() {
+  command -v apksigner 2>/dev/null && return 0
+  command -v apksigner.bat 2>/dev/null && return 0
+  # No SDK do Windows so existe o .bat, que o "command -v apksigner" nao encontra.
+  local sdk="${ANDROID_HOME//\\//}"
+  ls "$sdk"/build-tools/*/apksigner "$sdk"/build-tools/*/apksigner.bat 2>/dev/null | sort | tail -1
+}
+if [ "${PERMITIR_TROCA_DE_ASSINATURA:-false}" != "true" ]; then
+  AS=$(_apksigner)
+  if [ -z "$AS" ]; then
+    echo "abortado: apksigner nao encontrado - sem ele nao da pra conferir a assinatura." >&2
+    echo "instale o build-tools do SDK, ou assuma o risco com PERMITIR_TROCA_DE_ASSINATURA=true." >&2
+    exit 1
+  fi
   if curl -fsS -o /tmp/fiap-no-ar.apk "$URL/app/FIAP-Estudante.apk"; then
+    _digest() { "$AS" verify --print-certs "$1" | sed -nE 's/.*SHA-256 digest: ([0-9a-f]+).*/\1/p' | head -1; }
     ASSIN_NOVA=$(_digest "$APK"); ASSIN_NO_AR=$(_digest /tmp/fiap-no-ar.apk); rm -f /tmp/fiap-no-ar.apk
-    if [ -n "$ASSIN_NO_AR" ] && [ "$ASSIN_NOVA" != "$ASSIN_NO_AR" ]; then
+    # Digest vazio significa que a checagem falhou, nao que passou: aborta.
+    if [ -z "$ASSIN_NOVA" ] || [ -z "$ASSIN_NO_AR" ]; then
+      echo "abortado: nao consegui ler a assinatura (nova='$ASSIN_NOVA' no_ar='$ASSIN_NO_AR')." >&2
+      exit 1
+    fi
+    if [ "$ASSIN_NOVA" != "$ASSIN_NO_AR" ]; then
       echo "abortado: assinatura diferente da que esta publicada." >&2
       echo "  no ar: $ASSIN_NO_AR" >&2
       echo "  nova:  $ASSIN_NOVA" >&2
-      echo "ninguem conseguiria atualizar (so instalacao limpa). Builde na maquina com a keystore certa." >&2
+      echo "ninguem conseguiria atualizar (so instalacao limpa). Use a keystore certa." >&2
       exit 1
     fi
+    echo "assinatura confere: $ASSIN_NOVA"
+  else
+    echo "aviso: nao baixei o APK publicado - assinatura nao conferida (primeira publicacao?)." >&2
   fi
-else
-  [ "${PERMITIR_TROCA_DE_ASSINATURA:-false}" = "true" ] || echo "aviso: apksigner nao esta no PATH - assinatura nao conferida." >&2
 fi
 NOV=$(printf '%s\n' "$@" | python3 -c 'import sys,json;print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')
 
