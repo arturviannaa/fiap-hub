@@ -1,0 +1,4 @@
+# Scripts de shell sempre com LF: no Windows (Git Bash) um .sh em CRLF quebra
+# continuacao de linha e heredoc, e o erro que aparece nao diz isso.
+*.sh text eol=lf
+gradlew text eol=lf
